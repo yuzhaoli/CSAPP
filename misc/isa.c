@@ -10,7 +10,9 @@ extern int gui_mode;
 
 /* Bytes Per Line = Block size of memory */
 #define BPL 32
-
+//kAc Marked at 21:00, 5.16
+//这个结构表示了每个寄存器的名称，标号
+//保留
 struct {
     char *name;
     int id;
@@ -35,7 +37,9 @@ struct {
     {"----",  REG_ERR}
 };
 
-
+//kAc Marked at 21:00, 5.16
+//Name->标号
+//保留
 reg_id_t find_register(char *name)
 {
     int i;
@@ -44,7 +48,9 @@ reg_id_t find_register(char *name)
 	    return reg_table[i].id;
     return REG_ERR;
 }
-
+//kAc Marked at 21:00, 5.16
+//标号->Name
+//保留
 char *reg_name(reg_id_t id)
 {
     if (id >= 0 && id < REG_NONE)
@@ -53,12 +59,17 @@ char *reg_name(reg_id_t id)
 	return reg_table[REG_NONE].name;
 }
 
+//kAc Marked at 21:00, 5.16
+//通过标号判断寄存器的合法性
+//保留
 /* Is the given register ID a valid program register? */
 int reg_valid(reg_id_t id)
 {
   return id >= 0 && id < REG_NONE && reg_table[id].id == id;
 }
-
+//kAc Marked at 21:00, 5.16
+//所有的指令
+//需要添加指令
 instr_t instruction_set[] = 
 {
     {"nop",    HPACK(I_NOP, F_NONE), 1, NO_ARG, 0, 0, NO_ARG, 0, 0 },
@@ -102,10 +113,14 @@ instr_t instruction_set[] =
     {".long",  0x00, 4, I_ARG, 0, 4, NO_ARG, 0, 0 },
     {NULL,     0   , 0, NO_ARG, 0, 0, NO_ARG, 0, 0 }
 };
-
+//kAc Marked at 21:00, 5.16
+//不合法指令
+//保留
 instr_t invalid_instr =
     {"XXX",     0   , 0, NO_ARG, 0, 0, NO_ARG, 0, 0 };
-
+//kAc Marked at 21:00, 5.16
+//名字->指令ID
+//保留
 instr_ptr find_instr(char *name)
 {
     int i;
@@ -115,6 +130,9 @@ instr_ptr find_instr(char *name)
     return NULL;
 }
 
+//kAc Marked at 21:00, 5.16
+//指令ID->名字
+//保留
 /* Return name of instruction given its encoding */
 char *iname(int instr) {
     int i;
@@ -131,7 +149,10 @@ instr_ptr bad_instr()
     return &invalid_instr;
 }
 
-
+//kAc Marked at 21:00, 5.16
+//得到一个初始化过的内存，共计len个byte
+//分配一段内存
+//待定
 mem_t init_mem(int len)
 {
 
@@ -142,24 +163,33 @@ mem_t init_mem(int len)
     return result;
 }
 
+//kAc Marked at 21:00, 5.16
+//将一段内存清零
+//待定
 void clear_mem(mem_t m)
 {
     memset(m->contents, 0, m->len);
 }
-
+//kAc Marked at 21:00, 5.16
+//释放一段内存
+//待定
 void free_mem(mem_t m)
 {
     free((void *) m->contents);
     free((void *) m);
 }
-
+//kAc Marked at 21:00, 5.16
+//两片内存复制
+//待定
 mem_t copy_mem(mem_t oldm)
 {
     mem_t newm = init_mem(oldm->len);
     memcpy(newm->contents, oldm->contents, oldm->len);
     return newm;
 }
-
+//kAc Marked at 21:00, 5.16
+//比较两片内存，并将结果存至outfile
+//待定
 bool_t diff_mem(mem_t oldm, mem_t newm, FILE *outfile)
 {
     word_t pos;
@@ -180,6 +210,9 @@ bool_t diff_mem(mem_t oldm, mem_t newm, FILE *outfile)
     return diff;
 }
 
+//kAc Marked at 21:00, 5.16
+//16进制char->int
+//保留
 int hex2dig(char c)
 {
     if (isdigit((int)c))
@@ -190,6 +223,9 @@ int hex2dig(char c)
 	return c - 'a' + 10;
 }
 
+//kAc Marked at 21:00, 5.16
+//使用文件初始化内存
+//待定
 #define LINELEN 4096
 int load_mem(mem_t m, FILE *infile, int report_error)
 {
@@ -265,6 +301,8 @@ int load_mem(mem_t m, FILE *infile, int report_error)
 		return 0;
 	    }
 	    byte = hex2dig(ch)*16+hex2dig(cl);
+//kAc Marked at 21:00, 5.16
+//潜在的被修改的地方
 	    m->contents[bytepos++] = byte;
 	    byte_cnt++;
 	    empty_line = 0;
@@ -296,6 +334,9 @@ int load_mem(mem_t m, FILE *infile, int report_error)
     return byte_cnt;
 }
 
+//kAc Marked at 21:00, 5.16
+//得到m在pos位置的byte，放到dest，如果越界则返回FALSE
+//修改
 bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
 {
     if (pos < 0 || pos >= m->len)
@@ -303,6 +344,10 @@ bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
     *dest = m->contents[pos];
     return TRUE;
 }
+
+//kAc Marked at 21:00, 5.16
+//得到m在pos位置的word，放到dest，如果越界则返回FALSE
+//修改
 
 bool_t get_word_val(mem_t m, word_t pos, word_t *dest)
 {
@@ -317,6 +362,9 @@ bool_t get_word_val(mem_t m, word_t pos, word_t *dest)
     return TRUE;
 }
 
+//kAc Marked at 21:00, 5.16
+//修改m在pos位置的byte为val，如果越界则返回FALSE
+//修改
 bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 {
     if (pos < 0 || pos >= m->len)
@@ -324,7 +372,9 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
     m->contents[pos] = val;
     return TRUE;
 }
-
+//kAc Marked at 21:00, 5.16
+//修改m在pos位置的word为val，如果越界则返回FALSE
+//修改
 bool_t set_word_val(mem_t m, word_t pos, word_t val)
 {
     int i;
@@ -336,6 +386,10 @@ bool_t set_word_val(mem_t m, word_t pos, word_t val)
     }
     return TRUE;
 }
+//kAc Marked at 21:00, 5.16
+//将m中的内容输出到outfile中
+//从pos位置开始输出，共len个bit
+//待定
 
 void dump_memory(FILE *outfile, mem_t m, word_t pos, int len)
 {
@@ -359,7 +413,9 @@ void dump_memory(FILE *outfile, mem_t m, word_t pos, int len)
 	}
     }
 }
-
+//kAc Marked at 21:00, 5.16
+//关于寄存器file的操作
+//保留
 mem_t init_reg()
 {
     return init_mem(32);
@@ -619,6 +675,10 @@ bool_t cond_holds(cc_t cc, cond_t bcond) {
 
 
 /* Execute single instruction.  Return status. */
+//kAc Marked at 21:00, 5.16
+//执行一步
+//修改
+
 stat_t step_state(state_ptr s, FILE *error_file)
 {
     word_t argA, argB;
