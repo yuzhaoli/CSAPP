@@ -104,8 +104,8 @@ instr_t instruction_set[] =
     {"popl",   HPACK(I_POPL, F_NONE) ,  2, R_ARG, 1, 1, NO_ARG, 0, 0 },
     {"iaddl",  HPACK(I_IADDL, F_NONE), 6, I_ARG, 2, 4, R_ARG, 1, 0 },
     {"leave",  HPACK(I_LEAVE, F_NONE), 1, NO_ARG, 0, 0, NO_ARG, 0, 0 },
-    /* this is just a hack to make the I_POP2 code have an associated name */
-    {"pop2",   HPACK(I_POP2, F_NONE) , 0, NO_ARG, 0, 0, NO_ARG, 0, 0 },
+    /* test&set is similar to mrmovl */
+    {"testset",   HPACK(I_TESTSET, F_NONE) , 6, M_ARG, 1, 0, R_ARG, 1, 1 },
 
     /* For allocation instructions, arg1hi indicates number of bytes */
     {".byte",  0x00, 1, I_ARG, 0, 1, NO_ARG, 0, 0 },
