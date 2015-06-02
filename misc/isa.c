@@ -710,7 +710,7 @@ stat_t step_state(state_ptr s, FILE *error_file)
     need_regids =
 	(hi0 == I_RRMOVL || hi0 == I_ALU || hi0 == I_PUSHL ||
 	 hi0 == I_POPL || hi0 == I_IRMOVL || hi0 == I_RMMOVL ||
-	 hi0 == I_MRMOVL || hi0 == I_IADDL);
+	 hi0 == I_MRMOVL || hi0 == I_TESTSET || hi0 == I_IADDL);
 
     if (need_regids) {
 	ok1 = get_byte_val(s->m, ftpc, &byte1);
@@ -721,6 +721,7 @@ stat_t step_state(state_ptr s, FILE *error_file)
 
     need_imm =
 	(hi0 == I_IRMOVL || hi0 == I_RMMOVL || hi0 == I_MRMOVL ||
+	  hi0 == I_TESTSET ||
 	 hi0 == I_JMP || hi0 == I_CALL || hi0 == I_IADDL);
 
     if (need_imm) {
@@ -817,6 +818,7 @@ stat_t step_state(state_ptr s, FILE *error_file)
 	}
 	s->pc = ftpc;
 	break;
+	case I_TESTSET:
     case I_MRMOVL:
 	if (!ok1) {
 	    if (error_file)
@@ -842,6 +844,9 @@ stat_t step_state(state_ptr s, FILE *error_file)
 	if (!get_word_val(s->m, cval, &val))
 	    return STAT_ADR;
 	set_reg_val(s->r, hi1, val);
+	/**/
+	if(hi0 == I_TESTSET)
+		set_word_val(s->m, cval, 1);
 	s->pc = ftpc;
 	break;
     case I_ALU:
