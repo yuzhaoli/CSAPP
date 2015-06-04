@@ -149,7 +149,10 @@ instr_ptr bad_instr()
     return &invalid_instr;
 }
 
-#define L1size (16*4)
+#define L1line (8)
+#define L1size (16*L1line)
+
+cache_line L1Cache[L1size];
 //kAc Marked at 21:00, 5.16
 //得到一个初始化过的内存，共计len个byte
 //分配一段内存
@@ -162,7 +165,8 @@ mem_t init_mem(int len)
     result->contents = (byte_t *) calloc(len, 1);
 	if(len>32)//not register
 	{
-		result->L1cache=(cache_line*) calloc(L1size,sizeof(cache_line));
+		//result->L1cache=(cache_line*) calloc(L1size,sizeof(cache_line));
+		memset(L1Cache,0,sizeof(L1Cache));
 	}
     return result;
 }
@@ -173,6 +177,7 @@ mem_t init_mem(int len)
 void clear_mem(mem_t m)
 {
     memset(m->contents, 0, m->len);
+	memset(L1Cache,0,sizeof(L1Cache));
 }
 //kAc Marked at 21:00, 5.16
 //释放一段内存
@@ -180,7 +185,6 @@ void clear_mem(mem_t m)
 void free_mem(mem_t m)
 {
     free((void *) m->contents);
-    free((void *) m->L1cache);
     free((void *) m);
 }
 //kAc Marked at 21:00, 5.16
@@ -351,6 +355,8 @@ int load_mem(mem_t m, FILE *infile, int report_error)
 //}
 bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
 {
+	word_t cache_pos=pos%L1size;
+	word_t pi,p0;
     if (pos < 0 || pos >= m->len)
 	return FALSE;
 	if(m->len<=32)//is register
@@ -359,29 +365,31 @@ bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
 		return TRUE;
 	}
 	
-	word_t cache_pos=pos%L1size;
-	if(m->L1cache[cache_pos].isValid==1 && m->L1cache[cache_pos].myAddr==pos)//hit?
+	if(L1Cache[cache_pos].isValid==1 && L1Cache[cache_pos].myAddr==pos)//hit?
 	{
-		//m->L1cache[cache_pos].isDirty=1;
-		*dest=m->L1cache[cache_pos].myContent;
+		*dest=L1Cache[cache_pos].myContent;
 	}
 	else//miss
 	{
-		//before eviction, need to write-back?
-		if(m->L1cache[cache_pos].isDirty==1)
+		//before eviction, need to write-back
+		p0=L1line*(pos/L1line);
+		for(pi=p0;pi<p0+L1line;pi++)
 		{
-			m->contents[ 
-				m->L1cache[cache_pos].myAddr
-			]=m->L1cache[cache_pos].myContent;
+			cache_pos=pi%L1size;
+			if(L1Cache[cache_pos].isValid==1 && L1Cache[cache_pos].isDirty==1)
+			{
+				m->contents[ 
+					L1Cache[cache_pos].myAddr
+				]=L1Cache[cache_pos].myContent;
+			}
+			L1Cache[cache_pos].isDirty=0;
+			L1Cache[cache_pos].isValid=1;
+			L1Cache[cache_pos].myAddr=pi;
+			L1Cache[cache_pos].myContent=m->contents[pi];
 		}
 		
-		//fill a byte, or a line? 16?
-		m->L1cache[cache_pos].isDirty=0;
-		m->L1cache[cache_pos].isValid=1;
-		m->L1cache[cache_pos].myAddr=pos;
-		m->L1cache[cache_pos].myContent=m->contents[pos];
-		
-		*dest=m->L1cache[cache_pos].myContent;
+		cache_pos=pos%L1size;
+		*dest=L1Cache[cache_pos].myContent;
 	}
     return TRUE;
 }
@@ -420,6 +428,8 @@ bool_t get_word_val(mem_t m, word_t pos, word_t *dest)
 //}
 bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 {
+	word_t cache_pos=pos%L1size;
+	word_t p0,pi;
     if (pos < 0 || pos >= m->len)
 	return FALSE;
 	if(m->len<=32)//is register
@@ -428,28 +438,30 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 		return TRUE;
 	}
 	
-	word_t cache_pos=pos%L1size;
-	if(m->L1cache[cache_pos].isValid==1 && m->L1cache[cache_pos].myAddr==pos)//hit?
+	if(L1Cache[cache_pos].isValid==1 && L1Cache[cache_pos].myAddr==pos)//hit?
 	{
-		m->L1cache[cache_pos].isDirty=1;
-		m->L1cache[cache_pos].myContent=val;
+		L1Cache[cache_pos].isDirty=1;
+		L1Cache[cache_pos].myContent=val;
 		//broadcast??
 	}
 	else
 	{
-		if(m->L1cache[cache_pos].isDirty==1)
+		//before eviction, need to write-back; no need to writeback whole cacheline!
+		if(L1Cache[cache_pos].isValid==1 &&L1Cache[cache_pos].isDirty==1)
 		{
 			m->contents[ 
-				m->L1cache[cache_pos].myAddr
-			]=m->L1cache[cache_pos].myContent;
+				L1Cache[cache_pos].myAddr
+			]=L1Cache[cache_pos].myContent;
 		}
 		
+		cache_pos=pos%L1size;
+		
 		//fill a byte, or a line? 16?
-		m->L1cache[cache_pos].isDirty=1;
-		m->L1cache[cache_pos].isValid=1;
-		m->L1cache[cache_pos].myAddr=pos;
+		L1Cache[cache_pos].isDirty=1;
+		L1Cache[cache_pos].isValid=1;
+		L1Cache[cache_pos].myAddr=pos;
 		//also need to broadcast
-		m->L1cache[cache_pos].myContent=val;
+		L1Cache[cache_pos].myContent=val;
 	}
     return TRUE;
 }
