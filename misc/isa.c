@@ -470,8 +470,10 @@ bool_t testset_byte_val(mem_t m, word_t pos, byte_t *dest)
 {
     if (pos < 0 || pos >= m->len)
 	return FALSE;
-	*dest = m->contents[pos];
-    m->contents[pos] = 1;
+	//*dest = m->contents[pos];
+    //m->contents[pos] = 1;
+	get_byte_val(m,pos,dest);
+	set_byte_val(m,pos,1);
     return TRUE;
 }
 //kAc Marked at 21:00, 5.16
