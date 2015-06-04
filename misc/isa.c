@@ -852,11 +852,15 @@ stat_t step_state(state_ptr s, FILE *error_file)
 	
 	//Use test&set atomic mem access
 	if(hi0 == I_TESTSET)
+	{
 		if (!testset_byte_val(s->m, cval, &val))
 			return STAT_ADR;
+	}
 	else
+	{
 		if (!get_word_val(s->m, cval, &val))
 			return STAT_ADR;
+	}
 		
 	set_reg_val(s->r, hi1, val);
 	s->pc = ftpc;
