@@ -155,7 +155,6 @@ instr_ptr bad_instr()
 //待定
 mem_t init_mem(int len)
 {
-
     mem_t result = (mem_t) malloc(sizeof(mem_rec));
     len = ((len+BPL-1)/BPL)*BPL;
     result->len = len;
@@ -370,6 +369,15 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
     if (pos < 0 || pos >= m->len)
 	return FALSE;
     m->contents[pos] = val;
+    return TRUE;
+}
+//test&set
+bool_t testset_byte_val(mem_t m, word_t pos, byte_t *dest)
+{
+    if (pos < 0 || pos >= m->len)
+	return FALSE;
+	*dest = m->contents[pos];
+    m->contents[pos] = 1;
     return TRUE;
 }
 //kAc Marked at 21:00, 5.16
@@ -841,12 +849,16 @@ stat_t step_state(state_ptr s, FILE *error_file)
 	}
 	if (reg_valid(lo1)) 
 	    cval += get_reg_val(s->r, lo1);
-	if (!get_word_val(s->m, cval, &val))
-	    return STAT_ADR;
-	set_reg_val(s->r, hi1, val);
-	/**/
+	
+	//Use test&set atomic mem access
 	if(hi0 == I_TESTSET)
-		set_word_val(s->m, cval, 1);
+		if (!testset_byte_val(s->m, cval, &val))
+			return STAT_ADR;
+	else
+		if (!get_word_val(s->m, cval, &val))
+			return STAT_ADR;
+		
+	set_reg_val(s->r, hi1, val);
 	s->pc = ftpc;
 	break;
     case I_ALU:
