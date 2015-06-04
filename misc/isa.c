@@ -228,10 +228,22 @@ void clear_mem(mem_t m)
 //待定
 void free_mem(mem_t m)
 {
+	int i;
     //if((byte_t *)m->contents != (byte_t *)shm2())
 	//	free((void *) m->contents);
 	if(m->len==32)
 		free((void *) m->contents);
+	else
+	if((byte_t *)m->contents == (byte_t *)shm2())
+	{
+		//cache write-back!
+		printf("Freeing SHMEM; writing back L1 cache...\n");
+		for(i=0;i<L1size;i++)
+		{
+			if(L1Cache[i].isValid && L1Cache[i].isDirty)
+				m->contents[L1Cache[i].myAddr]=L1Cache[i].myContent;
+		}
+	}
 	//do not free the shared-memory pointer!
     free((void *) m);
 }
@@ -569,7 +581,6 @@ bool_t get_word_val(mem_t m, word_t pos, word_t *dest)
 bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 {
 	word_t cache_pos=pos%L1size;
-	word_t p0,pi;
     if (pos < 0 || pos >= m->len)
 	return FALSE;
 	if(m->len<=32)//is register
