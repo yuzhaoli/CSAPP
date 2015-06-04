@@ -170,8 +170,8 @@ int aluA = [
 ## Select input B to ALU
 int aluB = [
 	icode in { IRMMOVL, IMRMOVL, IOPL, ICALL, 
-		      IPUSHL, IRET, IPOPL, IIADDL } : valB;
-	icode in { IRRMOVL, IIRMOVL, ITESTSET } : 0;
+		      IPUSHL, IRET, IPOPL, IIADDL, ITESTSET } : valB;
+	icode in { IRRMOVL, IIRMOVL } : 0;
 	# Other instructions don't need ALU
 ];
 
@@ -182,7 +182,7 @@ int alufun = [
 ];
 
 ## Should the condition codes be updated?
-bool set_cc = icode in { IOPL, IIADDL, ITESTSET };
+bool set_cc = icode in { IOPL, IIADDL };
 
 ################ Memory Stage    ###################################
 
