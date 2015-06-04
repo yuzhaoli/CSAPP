@@ -6,7 +6,7 @@ YACC=bison
 LEXLIB = -lfl
 YAS=./yas
 
-all: yis yas hcl2c shmclear
+all: yis yas hcl2c shmclear shmput
 
 # These are implicit rules for making .yo files from .ys files.
 # E.g., make sum.yo
@@ -40,8 +40,11 @@ yis: yis.o isa.o
 shmclear.o: shmclear.c isa.h
 	$(CC) $(CFLAGS) -c shmclear.c
 
-shmclear: shmclear.o isa.h
-	$(CC) $(CFLAGS) shmclear.o  -o shmclear
+shmclear: shmclear.o isa.o isa.h
+	$(CC) $(CFLAGS) shmclear.o  isa.o -o shmclear
+	
+shmput: isa.o isa.h
+	$(CC) $(CFLAGS) shmput.c  isa.o -o shmput
 
 hcl2c: hcl.tab.c lex.yy.c node.c outgen.c
 	$(CC) $(LCFLAGS) node.c lex.yy.c hcl.tab.c outgen.c -o hcl2c
