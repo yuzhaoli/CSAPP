@@ -208,7 +208,6 @@ mem_t init_mem(int len)
 		//result->L1cache=(cache_line*) calloc(L1size,sizeof(cache_line));
 		memset(L1Cache,0,sizeof(L1Cache));
 		//this is the initialization of a CPU!
-		printf("%d==%d?",len,MEM_SIZE);
 		result->contents=(byte_t *) shm2();
 	}
 	else
@@ -229,7 +228,7 @@ void clear_mem(mem_t m)
 //待定
 void free_mem(mem_t m)
 {
-    free((void *) m->contents);
+    if(m->contents!=shm2())free((void *) m->contents);
     free((void *) m);
 }
 //kAc Marked at 21:00, 5.16
