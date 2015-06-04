@@ -1,10 +1,10 @@
 #include "isa.h"
 int main()
 {
-	byte_t* m=shm1();
+	byte_t* m=(byte_t*) shm1();
 	int i;
 	memset(m,0,sizeof(system_status));
-	m=shm2();
+	m=(byte_t*) shm2();
 	printf("SMEM Contents:\n");
 	for(i=0;i<MEM_SIZE;i++)
 	{
