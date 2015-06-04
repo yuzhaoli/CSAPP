@@ -20,8 +20,9 @@ int main(int argc, char *argv[])
     int max_steps = 10000;
 
     state_ptr s = new_state(MEM_SIZE);
-    mem_t saver = copy_reg(s->r);
-    mem_t savem;
+    //mem_t saver = copy_reg(s->r);
+	mem_t saver = calloc(32,1);
+    mem_t savem = calloc(MEM_SIZE,1);
     int step = 0;
 
     stat_t e = STAT_AOK;
@@ -39,7 +40,8 @@ int main(int argc, char *argv[])
 	return 1;
     }
 
-    savem = copy_mem(s->m);
+    //savem = copy_mem(s->m);
+	load_mem_raw(savem, code_file, 1);
   
     if (argc > 2)
 	max_steps = atoi(argv[2]);
@@ -56,9 +58,9 @@ int main(int argc, char *argv[])
     printf("\nChanges to memory:\n");
     diff_mem(savem, s->m, stdout);
 
-    free_state(s);
     free_reg(saver);
     free_mem(savem);
+	free_state(s);
 
     return 0;
 }

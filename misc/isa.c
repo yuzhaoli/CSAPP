@@ -228,12 +228,17 @@ void clear_mem(mem_t m)
 //待定
 void free_mem(mem_t m)
 {
-    if(m->contents!=shm2())free((void *) m->contents);
+    //if((byte_t *)m->contents != (byte_t *)shm2())
+	//	free((void *) m->contents);
+	if(m->len==32)
+		free((void *) m->contents);
+	//do not free the shared-memory pointer!
     free((void *) m);
 }
 //kAc Marked at 21:00, 5.16
 //两片内存复制
 //待定
+/*
 mem_t copy_mem(mem_t oldm)//for backup only; copy into raw mem
 {
 	mem_t newm = (mem_t) malloc(sizeof(mem_rec));
@@ -243,7 +248,7 @@ mem_t copy_mem(mem_t oldm)//for backup only; copy into raw mem
     newm->contents = (byte_t *) calloc(len, 1);
     memcpy(newm->contents, oldm->contents, oldm->len);
     return newm;
-}
+}*/
 //kAc Marked at 21:00, 5.16
 //比较两片内存，并将结果存至outfile
 //待定
@@ -387,6 +392,90 @@ int load_mem(mem_t m, FILE *infile, int report_error)
 		report_line(line_no++, addr, hexcode, line);
 	}
 #endif /* HAS_GUI */ 
+    }
+    return byte_cnt;
+}
+
+int load_mem_raw(mem_t m, FILE *infile, int report_error)//for backup diff; no GUI considerations
+{
+    /* Read contents of .yo file */
+    char buf[LINELEN];
+    char c, ch, cl;
+    int byte_cnt = 0;
+    int lineno = 0;
+    word_t bytepos = 0;
+    int empty_line = 1;
+    int addr = 0;
+    char hexcode[15];
+
+    int index = 0;
+
+    while (fgets(buf, LINELEN, infile)) {
+	int cpos = 0;
+	empty_line = 1;
+	lineno++;
+	/* Skip white space */
+	while (isspace((int)buf[cpos]))
+	    cpos++;
+
+	if (buf[cpos] != '0' ||
+	    (buf[cpos+1] != 'x' && buf[cpos+1] != 'X'))
+	    continue; /* Skip this line */      
+	cpos+=2;
+
+	/* Get address */
+	bytepos = 0;
+	while (isxdigit((int)(c=buf[cpos]))) {
+	    cpos++;
+	    bytepos = bytepos*16 + hex2dig(c);
+	}
+
+	while (isspace((int)buf[cpos]))
+	    cpos++;
+
+	if (buf[cpos++] != ':') {
+	    if (report_error) {
+		fprintf(stderr, "Error reading file. Expected colon\n");
+		fprintf(stderr, "Line %d:%s\n", lineno, buf);
+		fprintf(stderr,
+			"Reading '%c' at position %d\n", buf[cpos], cpos);
+	    }
+	    return 0;
+	}
+
+	addr = bytepos;
+
+	while (isspace((int)buf[cpos]))
+	    cpos++;
+
+	index = 0;
+
+	/* Get code */
+	while (isxdigit((int)(ch=buf[cpos++])) && 
+	       isxdigit((int)(cl=buf[cpos++]))) {
+	    byte_t byte = 0;
+	    if (bytepos >= m->len) {
+		if (report_error) {
+		    fprintf(stderr,
+			    "Error reading file. Invalid address. 0x%x\n",
+			    bytepos);
+		    fprintf(stderr, "Line %d:%s\n", lineno, buf);
+		}
+		return 0;
+	    }
+	    byte = hex2dig(ch)*16+hex2dig(cl);
+//kAc Marked at 21:00, 5.16
+//潜在的被修改的地方
+	    m->contents[bytepos++] = byte;
+	    byte_cnt++;
+	    empty_line = 0;
+	    hexcode[index++] = ch;
+	    hexcode[index++] = cl;
+	}
+	/* Fill rest of hexcode with blanks */
+	for (; index < 12; index++)
+	    hexcode[index] = ' ';
+	hexcode[index] = '\0';
     }
     return byte_cnt;
 }
@@ -770,7 +859,7 @@ void free_state(state_ptr s)
     free_mem(s->m);
     free((void *) s);
 }
-
+/*
 state_ptr copy_state(state_ptr s) {
     state_ptr result = (state_ptr) malloc(sizeof(state_rec));
     result->pc = s->pc;
@@ -800,7 +889,7 @@ bool_t diff_state(state_ptr olds, state_ptr news, FILE *outfile) {
     if (diff_mem(olds->m, news->m, outfile))
 	diff = TRUE;
     return diff;
-}
+}*/
 
 
 /* Branch logic */
