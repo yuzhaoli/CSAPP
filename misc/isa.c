@@ -7,6 +7,7 @@
 //for flie locking:
 #include <fcntl.h>
 #include <unistd.h>
+const char* lockfile = "/var/lock/CSAPP_testset.lock";
 
 /* Are we running in GUI mode? */
 extern int gui_mode;
@@ -469,7 +470,6 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
     return TRUE;
 }
 
-char* lockfile = "testset.lock";
 //test&set
 bool_t testset_byte_val(mem_t m, word_t pos, byte_t *dest)
 {
