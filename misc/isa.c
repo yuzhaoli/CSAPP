@@ -360,28 +360,28 @@ bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
 	}
 	
 	word_t cache_pos=pos%L1size;
-	if(m->L1cache[cache_pos]->isValid==1 && m->L1cache[cache_pos]->myAddr==pos)//hit?
+	if(m->L1cache[cache_pos].isValid==1 && m->L1cache[cache_pos].myAddr==pos)//hit?
 	{
-		//m->L1cache[cache_pos]->isDirty=1;
-		*dest=m->L1cache[cache_pos]->myContent;
+		//m->L1cache[cache_pos].isDirty=1;
+		*dest=m->L1cache[cache_pos].myContent;
 	}
 	else//miss
 	{
 		//before eviction, need to write-back?
-		if(m->L1cache[cache_pos]->isDirty==1)
+		if(m->L1cache[cache_pos].isDirty==1)
 		{
 			m->contents[ 
-				m->L1cache[cache_pos]->myAddr
-			]=m->L1cache[cache_pos]->myContent;
+				m->L1cache[cache_pos].myAddr
+			]=m->L1cache[cache_pos].myContent;
 		}
 		
 		//fill a byte, or a line? 16?
-		m->L1cache[cache_pos]->isDirty=0;
-		m->L1cache[cache_pos]->isValid=1;
-		m->L1cache[cache_pos]->myAddr=pos;
-		m->L1cache[cache_pos]->myContent=m->contents[pos];
+		m->L1cache[cache_pos].isDirty=0;
+		m->L1cache[cache_pos].isValid=1;
+		m->L1cache[cache_pos].myAddr=pos;
+		m->L1cache[cache_pos].myContent=m->contents[pos];
 		
-		*dest=m->L1cache[cache_pos]->myContent;
+		*dest=m->L1cache[cache_pos].myContent;
 	}
     return TRUE;
 }
@@ -429,27 +429,27 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 	}
 	
 	word_t cache_pos=pos%L1size;
-	if(m->L1cache[cache_pos]->isValid==1 && m->L1cache[cache_pos]->myAddr==pos)//hit?
+	if(m->L1cache[cache_pos].isValid==1 && m->L1cache[cache_pos].myAddr==pos)//hit?
 	{
-		m->L1cache[cache_pos]->isDirty=1;
-		m->L1cache[cache_pos]->myContent=val;
+		m->L1cache[cache_pos].isDirty=1;
+		m->L1cache[cache_pos].myContent=val;
 		//broadcast??
 	}
 	else
 	{
-		if(m->L1cache[cache_pos]->isDirty==1)
+		if(m->L1cache[cache_pos].isDirty==1)
 		{
 			m->contents[ 
-				m->L1cache[cache_pos]->myAddr
-			]=m->L1cache[cache_pos]->myContent;
+				m->L1cache[cache_pos].myAddr
+			]=m->L1cache[cache_pos].myContent;
 		}
 		
 		//fill a byte, or a line? 16?
-		m->L1cache[cache_pos]->isDirty=1;
-		m->L1cache[cache_pos]->isValid=1;
-		m->L1cache[cache_pos]->myAddr=pos;
+		m->L1cache[cache_pos].isDirty=1;
+		m->L1cache[cache_pos].isValid=1;
+		m->L1cache[cache_pos].myAddr=pos;
 		//also need to broadcast
-		m->L1cache[cache_pos]->myContent=val;
+		m->L1cache[cache_pos].myContent=val;
 	}
     return TRUE;
 }
