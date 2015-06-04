@@ -24,6 +24,15 @@
 #define MAXBUF 1024
 #define TKARGS 3
 
+
+//for flie locking:
+#include <fcntl.h>
+#include <unistd.h>
+#ifndef lockfile
+#define lockfile "/var/lock/CSAPP_testset.lock"
+#endif
+
+
 /***************
  * Begin Globals
  ***************/
@@ -655,10 +664,14 @@ static void update_state()
     }
 }
 
+
 /* Execute one instruction */
 /* Return resulting status */
 static byte_t sim_step()
-{
+{	
+	int fd;
+	struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
+	
     word_t aluA;
     word_t aluB;
     word_t alufun;
@@ -750,7 +763,14 @@ static byte_t sim_step()
     mem_addr = gen_mem_addr();
     mem_data = gen_mem_data();
 
-
+	//need to lock this section if op is test&set.
+	if(icode==I_TESTSET)
+	{
+		printf("TS! locking...\n");
+		fd = open(lockfile, O_CREAT | O_RDWR);
+		fcntl(fd, F_SETLKW, &fl);
+	}
+	
     if (gen_mem_read()) {
       dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
       if (dmem_error) {
@@ -765,6 +785,13 @@ static byte_t sim_step()
       word_t junk;
       dmem_error = dmem_error || !get_word_val(mem, mem_addr, &junk);
     }
+	
+	if(icode==I_TESTSET)
+	{
+		printf("unlocking...\n");
+		fl.l_type = F_UNLCK;
+		fcntl(fd, F_SETLK, &fl);
+	}
 
     status = gen_Stat();
 
