@@ -11,7 +11,7 @@ Ok:
   nop
   mrmovl 0(%edx),%ebx
   testset 0(%edx),%ecx
-  iaddl $0,%eax
+  iaddl $0,%ecx
   je End
   nop
 End:
