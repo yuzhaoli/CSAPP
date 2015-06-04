@@ -1,0 +1,16 @@
+# testset: swap to mem!
+  irmovl $1023,%edx
+  mrmovl 0(%edx),%eax
+  nop
+  testset 0(%edx),%eax
+  je Ok
+  jmp End
+Ok:
+  nop
+  nop
+  mrmovl 0(%edx),%ebx
+  testset 0(%edx),%ecx
+  je End
+  nop
+End:
+  halt
