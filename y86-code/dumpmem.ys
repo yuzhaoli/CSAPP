@@ -1,5 +1,15 @@
-# testset: swap to mem!
-  irmovl $1023,%edx
+# dumpmem: write to mem!
+  irmovl $1024,%edx
+  irmovl $123, %ecx
+Loop:
+  rmmovl %ecx, 0(%edx)
+  iaddl $4,%edx
+  rrmovl %edx,%eax
+  irmovl $1536,%ebx
+  subl %eax,%ebx
+  jne Loop
+  halt   
+
   mrmovl 0(%edx),%eax
   nop
   testset 0(%edx),%eax
