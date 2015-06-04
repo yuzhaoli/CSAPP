@@ -162,7 +162,7 @@ mem_t init_mem(int len)
     result->contents = (byte_t *) calloc(len, 1);
 	if(len>32)//not register
 	{
-		result->L1cache=(cache_line*) malloc(L1size*sizeof(cache_line));
+		result->L1cache=(cache_line*) calloc(L1size,sizeof(cache_line));
 	}
     return result;
 }
@@ -342,11 +342,47 @@ int load_mem(mem_t m, FILE *infile, int report_error)
 //kAc Marked at 21:00, 5.16
 //得到m在pos位置的byte，放到dest，如果越界则返回FALSE
 //修改
+//bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
+//{
+//    if (pos < 0 || pos >= m->len)
+//	return FALSE;
+//    *dest = m->contents[pos];
+//    return TRUE;
+//}
 bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
 {
     if (pos < 0 || pos >= m->len)
 	return FALSE;
-    *dest = m->contents[pos];
+	if(m->len<=32)//is register
+	{
+		*dest = m->contents[pos];
+		return TRUE;
+	}
+	
+	word_t cache_pos=pos%L1size;
+	if(m->L1cache[cache_pos]->isValid==1 && m->L1cache[cache_pos]->myAddr==pos)//hit?
+	{
+		//m->L1cache[cache_pos]->isDirty=1;
+		*dest=m->L1cache[cache_pos]->myContent;
+	}
+	else//miss
+	{
+		//before eviction, need to write-back?
+		if(m->L1cache[cache_pos]->isDirty==1)
+		{
+			m->contents[ 
+				m->L1cache[cache_pos]->myAddr
+			]=m->L1cache[cache_pos]->myContent;
+		}
+		
+		//fill a byte, or a line? 16?
+		m->L1cache[cache_pos]->isDirty=0;
+		m->L1cache[cache_pos]->isValid=1;
+		m->L1cache[cache_pos]->myAddr=pos;
+		m->L1cache[cache_pos]->myContent=m->contents[pos];
+		
+		*dest=m->L1cache[cache_pos]->myContent;
+	}
     return TRUE;
 }
 
@@ -362,7 +398,12 @@ bool_t get_word_val(mem_t m, word_t pos, word_t *dest)
 	return FALSE;
     val = 0;
     for (i = 0; i < 4; i++)
-	val = val | m->contents[pos+i]<<(8*i);
+	//val = val | m->contents[pos+i]<<(8*i);
+	{
+		byte_t curr;
+		get_byte_val(m, pos+i, &curr);
+		val = val | curr<<(8*i);
+	}
     *dest = val;
     return TRUE;
 }
@@ -370,11 +411,46 @@ bool_t get_word_val(mem_t m, word_t pos, word_t *dest)
 //kAc Marked at 21:00, 5.16
 //修改m在pos位置的byte为val，如果越界则返回FALSE
 //修改
+//bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
+//{
+//    if (pos < 0 || pos >= m->len)
+//	return FALSE;
+//    m->contents[pos] = val;
+//    return TRUE;
+//}
 bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 {
     if (pos < 0 || pos >= m->len)
 	return FALSE;
-    m->contents[pos] = val;
+	if(m->len<=32)//is register
+	{
+		m->contents[pos] = val;
+		return TRUE;
+	}
+	
+	word_t cache_pos=pos%L1size;
+	if(m->L1cache[cache_pos]->isValid==1 && m->L1cache[cache_pos]->myAddr==pos)//hit?
+	{
+		m->L1cache[cache_pos]->isDirty=1;
+		m->L1cache[cache_pos]->myContent=val;
+		//broadcast??
+	}
+	else
+	{
+		if(m->L1cache[cache_pos]->isDirty==1)
+		{
+			m->contents[ 
+				m->L1cache[cache_pos]->myAddr
+			]=m->L1cache[cache_pos]->myContent;
+		}
+		
+		//fill a byte, or a line? 16?
+		m->L1cache[cache_pos]->isDirty=1;
+		m->L1cache[cache_pos]->isValid=1;
+		m->L1cache[cache_pos]->myAddr=pos;
+		//also need to broadcast
+		m->L1cache[cache_pos]->myContent=val;
+	}
     return TRUE;
 }
 //test&set
@@ -395,7 +471,8 @@ bool_t set_word_val(mem_t m, word_t pos, word_t val)
     if (pos < 0 || pos + 4 > m->len)
 	return FALSE;
     for (i = 0; i < 4; i++) {
-	m->contents[pos+i] = val & 0xFF;
+	//m->contents[pos+i] = val & 0xFF;
+	set_byte_val(m, pos+i, val & 0xFF);
 	val >>= 8;
     }
     return TRUE;
