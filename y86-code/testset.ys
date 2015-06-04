@@ -3,6 +3,7 @@
   mrmovl 0(%edx),%eax
   nop
   testset 0(%edx),%eax
+  iaddl $0,%eax
   je Ok
   jmp End
 Ok:
@@ -10,6 +11,7 @@ Ok:
   nop
   mrmovl 0(%edx),%ebx
   testset 0(%edx),%ecx
+  iaddl $0,%eax
   je End
   nop
 End:
