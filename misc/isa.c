@@ -465,15 +465,23 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 	}
     return TRUE;
 }
+
+char* lockfile = "testset.lock";
 //test&set
 bool_t testset_byte_val(mem_t m, word_t pos, byte_t *dest)
 {
+	FILE* fd;
     if (pos < 0 || pos >= m->len)
 	return FALSE;
+	
+	fd = open(lockfile, O_CREAT);
+    flock(fd, LOCK_EX);
 	//*dest = m->contents[pos];
     //m->contents[pos] = 1;
 	get_byte_val(m,pos,dest);
 	set_byte_val(m,pos,1);
+	
+    flock(fd, LOCK_UN);
     return TRUE;
 }
 //kAc Marked at 21:00, 5.16
