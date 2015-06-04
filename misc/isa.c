@@ -149,6 +149,7 @@ instr_ptr bad_instr()
     return &invalid_instr;
 }
 
+#define L1size (16*4)
 //kAc Marked at 21:00, 5.16
 //得到一个初始化过的内存，共计len个byte
 //分配一段内存
@@ -159,6 +160,10 @@ mem_t init_mem(int len)
     len = ((len+BPL-1)/BPL)*BPL;
     result->len = len;
     result->contents = (byte_t *) calloc(len, 1);
+	if(len>32)//not register
+	{
+		result->L1cache=(cache_line*) malloc(L1size*sizeof(cache_line));
+	}
     return result;
 }
 
@@ -175,6 +180,7 @@ void clear_mem(mem_t m)
 void free_mem(mem_t m)
 {
     free((void *) m->contents);
+    free((void *) m->L1cache);
     free((void *) m);
 }
 //kAc Marked at 21:00, 5.16

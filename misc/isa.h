@@ -80,11 +80,20 @@ instr_ptr bad_instr();
 typedef unsigned char byte_t;
 typedef int word_t;
 
+/* L1 cache cache-line */
+typedef struct {
+	//each consists of 1 word
+  char isValid, isDirty;
+  word_t myAddr;
+  word_t myContent;
+} cache_line;
+
 /* Represent a memory as an array of bytes */
 typedef struct {
   int len;
   word_t maxaddr;
   byte_t *contents;
+  cache_line *L1cache;
 } mem_rec, *mem_t;
 
 /* Create a memory with len bytes */
