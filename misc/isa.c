@@ -4,6 +4,9 @@
 #include <string.h>
 #include "isa.h"
 
+//for flie locking:
+#include <fcntl.h>
+#include <unistd.h>
 
 /* Are we running in GUI mode? */
 extern int gui_mode;
@@ -470,18 +473,21 @@ char* lockfile = "testset.lock";
 //test&set
 bool_t testset_byte_val(mem_t m, word_t pos, byte_t *dest)
 {
-	FILE* fd;
+	int fd;
+	struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
+	
     if (pos < 0 || pos >= m->len)
 	return FALSE;
-	
-	fd = open(lockfile, O_CREAT);
-    flock(fd, LOCK_EX);
+
+	fd = open(lockfile, O_CREAT | O_RDWR);
+    fcntl(fd, F_SETLKW, &fl);
 	//*dest = m->contents[pos];
     //m->contents[pos] = 1;
 	get_byte_val(m,pos,dest);
 	set_byte_val(m,pos,1);
 	
-    flock(fd, LOCK_UN);
+	fl.l_type = F_UNLCK;
+    fcntl(fd, F_SETLK, &fl);
     return TRUE;
 }
 //kAc Marked at 21:00, 5.16
