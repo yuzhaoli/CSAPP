@@ -255,14 +255,17 @@ mem_t copy_mem(mem_t oldm)//for backup only; copy into raw mem
 bool_t diff_mem(mem_t oldm, mem_t newm, FILE *outfile)
 {
     word_t pos;
-    int len = oldm->len;
+    int len = MEM_SIZE;//oldm->len;
     bool_t diff = FALSE;
-    if (newm->len < len)
-	len = newm->len;
+    //if (newm->len < len)
+	//len = newm->len;
     for (pos = 0; (!diff || outfile) && pos < len; pos += 4) {
         word_t ov = 0;  word_t nv = 0;
-	get_word_val(oldm, pos, &ov);
-	get_word_val(newm, pos, &nv);
+	//get_word_val(oldm, pos, &ov);
+	//get_word_val(newm, pos, &nv);
+	//will be affected by L1 cache...
+	ov=oldm->contents[pos];
+	nv=newm->contents[pos];
 	if (nv != ov) {
 	    diff = TRUE;
 	    if (outfile)
