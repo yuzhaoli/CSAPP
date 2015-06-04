@@ -7,7 +7,9 @@
 //for flie locking:
 #include <fcntl.h>
 #include <unistd.h>
-const char* lockfile = "/var/lock/CSAPP_testset.lock";
+#ifndef lockfile
+#define lockfile "/var/lock/CSAPP_testset.lock"
+#endif
 
 /* Are we running in GUI mode? */
 extern int gui_mode;
