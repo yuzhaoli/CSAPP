@@ -155,6 +155,41 @@ instr_ptr bad_instr()
     return &invalid_instr;
 }
 
+/*
+  Started IPC section!
+  shm1: for IPC, using struct IPCaddr
+  shm2: the "memory"
+*/
+void* shm1(){
+	int shmid;
+	const int SHMSZ=sizeof(system_status)+1;
+    char *shm;
+    if ((shmid = shmget(SHMKEY1, SHMSZ, IPC_CREAT | 0666)) < 0) {
+        perror("shmget");
+        exit(1);
+    }
+    if ((shm = shmat(shmid, NULL, 0)) == (char *) -1) {
+        perror("shmat");
+        exit(1);
+    }
+    return shm;
+}
+void* shm2(){
+	int shmid;
+	const int SHMSZ=MEM_SIZE;
+    char *shm;
+    if ((shmid = shmget(SHMKEY2, SHMSZ, IPC_CREAT | 0666)) < 0) {
+        perror("shmget");
+        exit(1);
+    }
+    if ((shm = shmat(shmid, NULL, 0)) == (char *) -1) {
+        perror("shmat");
+        exit(1);
+    }
+    return shm;
+}
+
+
 #define L1line (8)
 #define L1size (16*L1line)
 
@@ -168,12 +203,16 @@ mem_t init_mem(int len)
     mem_t result = (mem_t) malloc(sizeof(mem_rec));
     len = ((len+BPL-1)/BPL)*BPL;
     result->len = len;
-    result->contents = (byte_t *) calloc(len, 1);
 	if(len>32)//not register
 	{
 		//result->L1cache=(cache_line*) calloc(L1size,sizeof(cache_line));
 		memset(L1Cache,0,sizeof(L1Cache));
+		//this is the initialization of a CPU!
+		printf("%d==%d?",len,MEM_SIZE);
+		result->contents=(byte_t *) shm2();
 	}
+	else
+		result->contents = (byte_t *) calloc(len, 1);
     return result;
 }
 
@@ -196,9 +235,13 @@ void free_mem(mem_t m)
 //kAc Marked at 21:00, 5.16
 //两片内存复制
 //待定
-mem_t copy_mem(mem_t oldm)
+mem_t copy_mem(mem_t oldm)//for backup only; copy into raw mem
 {
-    mem_t newm = init_mem(oldm->len);
+	mem_t newm = (mem_t) malloc(sizeof(mem_rec));
+	int len=oldm->len;
+    len = ((len+BPL-1)/BPL)*BPL;
+    newm->len = len;
+    newm->contents = (byte_t *) calloc(len, 1);
     memcpy(newm->contents, oldm->contents, oldm->len);
     return newm;
 }
@@ -446,6 +489,7 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 	
 	if(L1Cache[cache_pos].isValid==1 && L1Cache[cache_pos].myAddr==pos)//hit?
 	{
+		//broadcast? only when clean->dirty! or always! (note: it's possible that A read, A write, dirty, then B read, then A write (should also broadcast here); )
 		L1Cache[cache_pos].isDirty=1;
 		L1Cache[cache_pos].myContent=val;
 		//broadcast??
@@ -549,7 +593,9 @@ void free_reg(mem_t r)
 
 mem_t copy_reg(mem_t oldr)
 {
-    return copy_mem(oldr);
+	mem_t newm = init_mem(oldr->len);
+    memcpy(newm->contents, oldr->contents, oldr->len);
+    return newm;
 }
 
 bool_t diff_reg(mem_t oldr, mem_t newr, FILE *outfile)
