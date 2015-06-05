@@ -95,8 +95,8 @@ typedef struct {
   int msgVal;
   int pid[4];//pid position for each core; core=2?
 } system_status;
-#define SHMKEY1 16144
-#define SHMKEY2 23012 
+#define SHMKEY1 1614
+#define SHMKEY2 2302 
 void* shm1();
 void* shm2();
 
