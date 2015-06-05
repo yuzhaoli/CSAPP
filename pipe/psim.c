@@ -728,7 +728,8 @@ static byte_t sim_step_pipe(int max_instr, int ccount)
 #endif
 
     /* Performance monitoring */
-    if (mem_wb_curr->status != STAT_BUB && mem_wb_curr->icode != I_POP2) {
+   // if (mem_wb_curr->status != STAT_BUB && mem_wb_curr->icode != I_POP2) {
+	if (mem_wb_curr->status != STAT_BUB) {
 	starting_up = 0;
 	instructions++;
 	cycles++;
