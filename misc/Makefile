@@ -6,7 +6,8 @@ YACC=bison
 LEXLIB = -lfl
 YAS=./yas
 
-all: yis yas hcl2c shmclear shmput
+all: yis yas hcl2c shmclear shmput shmdump 
+#yism0 yism1 
 
 # These are implicit rules for making .yo files from .ys files.
 # E.g., make sum.yo
@@ -22,30 +23,33 @@ yas-grammar.c: yas-grammar.lex
 	$(LEX) yas-grammar.lex
 	mv lex.yy.c yas-grammar.c
 
-isa.o: isa.c isa.h
-	$(CC) $(CFLAGS) -c isa.c
+isa.o: 
+	$(CC) $(CFLAGS) -c isa.c 
 
-yas.o: yas.c yas.h isa.h
+yas.o:	
 	$(CC) $(CFLAGS) -c yas.c
-
-yas: yas.o yas-grammar.o isa.o
+	
+yas: yas-grammar.o isa.o yas.o
 	$(CC) $(CFLAGS) yas-grammar.o yas.o isa.o ${LEXLIB} -o yas
 
-yis.o: yis.c isa.h
-	$(CC) $(CFLAGS) -c yis.c
-
-yis: yis.o isa.o
-	$(CC) $(CFLAGS) yis.o isa.o -o yis
+yis:
+	$(CC) $(CFLAGS) yis.c isa.c -o yis
 	
-shmclear.o: shmclear.c isa.h
-	$(CC) $(CFLAGS) -c shmclear.c
-
-shmclear: shmclear.o isa.o isa.h
-	$(CC) $(CFLAGS) shmclear.o  isa.o -o shmclear
+yism0:
+	$(CC) $(CFLAGS) -DCORE0 yis.c isa.c -o yism0
 	
-shmput: isa.o isa.h
-	$(CC) $(CFLAGS) shmput.c  isa.o -o shmput
+yism1:
+	$(CC) $(CFLAGS) -DCORE1 yis.c isa.c -o yism1
 
+shmclear: isa.h
+	$(CC) $(CFLAGS) shmclear.c  isa.c -o shmclear
+	
+shmput: isa.h
+	$(CC) $(CFLAGS) shmput.c  isa.c -o shmput
+
+shmdump: isa.h
+	$(CC) $(CFLAGS) shmdump.c  isa.c -o shmdump
+	
 hcl2c: hcl.tab.c lex.yy.c node.c outgen.c
 	$(CC) $(LCFLAGS) node.c lex.yy.c hcl.tab.c outgen.c -o hcl2c
 
