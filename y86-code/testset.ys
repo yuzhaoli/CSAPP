@@ -1,8 +1,27 @@
 # testset: swap to mem!
   irmovl $1023,%edx
+  nop
+  nop
+  nop
+  nop
+  nop
   mrmovl 0(%edx),%eax
   nop
+  nop
+  nop
+  nop
+  nop
   testset 0(%edx),%eax
+  nop
+  nop
+  nop
+  nop
+  mrmovl 0(%edx),%ebx
+  nop
+  nop
+  nop
+  nop
+  nop
   iaddl $123, %ebx
   rmmovl %ebx,64(%edx)
   rmmovl %ebx,256(%edx)
