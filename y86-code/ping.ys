@@ -334,6 +334,7 @@ Core1:
 		xorl %ecx,%ecx
 		xorl %edx,%edx
 		xorl %esi,%esi
+		iaddl $0,%edi
 		halt
 		
 
