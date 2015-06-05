@@ -10,6 +10,9 @@
 #ifndef lockfile
 #define lockfile "/var/lock/CSAPP_testset.lock"
 #endif
+#ifndef mpi_lockfile
+#define mpi_lockfile "/var/lock/CSAPP_messagepassing.lock"
+#endif
 
 /* Are we running in GUI mode? */
 extern int gui_mode;
@@ -242,39 +245,69 @@ int peer_pid()
 void sig_send(){
 	int ret;
 	ret = kill(peer_pid(),SIGUSR1);
-	printf("signal sent; ret : %d\n",ret);
+	printf("signal sent to %d; ret : %d\n",peer_pid(), ret);
 }
 void send_msg(int addr, int value)
 {
+	int fd;
+	struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
+	printf("sending message: %d=%x\n",addr,value);
+	
 	//while(SYS->hasMessage)
 	//{
 	//	take_msg();usleep(1);
 	//}
 	//SYS->hasMessage=1;
-	while(__sync_lock_test_and_set(&SYS->hasMessage,1)){
-		take_msg();usleep(1);
-	}
+	//while(__sync_lock_test_and_set(&SYS->hasMessage,1)){
+	//	take_msg();usleep(1);
+	//}
+	
+	fd = open(mpi_lockfile, O_CREAT | O_RDWR);
+    fcntl(fd, F_SETLKW, &fl);
+	printf("Lock acquired; hasMsg:%d\n",SYS->hasMessage);
+	if(SYS->hasMessage)take_msg();
+	printf("MPI lock acquired and msg cleared!");
+	//assert hasMessage=0
+	SYS->hasMessage+=1;
+	
 	//assert hasMessage=1
 	if(SYS->hasMessage!=1)
 	{
-		printf("Test&Set failed?\n");exit(1);
+		printf("MPI acquire failed?\n");exit(1);
 	}
-	if(peer_pid()==0){SYS->hasMessage=0;return;}//no one to receive the message...
+	if(peer_pid()==0){
+		printf(" no peer\n!");
+		SYS->hasMessage=0;
+		fl.l_type = F_UNLCK;
+		fcntl(fd, F_SETLK, &fl);
+		return;
+		}//no one to receive the message...
 	SYS->msgAddr=addr;
 	SYS->msgVal=value;
+	printf("send sys sigusr\n");
 	sig_send();
+	printf("waiting for taking msg\n");
+	usleep(1000/10);//1ms/10
 	while(SYS->hasMessage==1)
 	{
-		usleep(10);
+		usleep(1000*10);
 	}
+	printf("taken.unclocking..\n");
+	fl.l_type = F_UNLCK;
+	fcntl(fd, F_SETLK, &fl);	
 }
 
 void sig_handler(int signo)
 {
     if (signo == SIGUSR1)
 	{
-        printf("received SIGUSR1\n");
-		while(SYS->hasMessage)take_msg();
+        printf("received SIGUSR1; hasMsg:%d\n",SYS->hasMessage);
+		//while(SYS->hasMessage)
+			take_msg();
+	}
+	else
+	{
+        printf("received signal:%d; hasMsg:%d\n",signo, SYS->hasMessage);
 	}
 }
 
@@ -285,6 +318,11 @@ void IPC_start()
 	
 	printf("Initializing Multicore mode; I'm core#%d, pid#%d\n",coreid,pid);
 	SYS=shm1();
+	#ifdef CORE0
+	memset(SYS,0,sizeof(system_status));
+	//cpu0 inits the sys stat
+	#endif
+	printf("SYS shm addr:%x\n",SYS);
 	SYS->pid[coreid]=pid;
 	
 	
@@ -313,11 +351,11 @@ mem_t init_mem(int len)
 		memset(L1Cache,0,sizeof(L1Cache));
 		//this is the initialization of a CPU!
 		result->contents=(byte_t *) shm2();
+		IPC_start();
 	}
 	else
 	{
 		result->contents = (byte_t *) calloc(len, 1);
-		IPC_start();
 	}
     return result;
 }

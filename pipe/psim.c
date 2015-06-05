@@ -872,9 +872,10 @@ int simResetCmd(ClientData clientData, Tcl_Interp *interp,
 		//mem = copy_reg(post_load_mem);
 		free_mem(mem);
 		printf("Copying post_load_mem into shared memory...\n");
-		mem = (mem_t) malloc(sizeof(mem_rec));
+		/*mem = (mem_t) malloc(sizeof(mem_rec));
 		mem->len = MEM_SIZE;
-		mem->contents=shm2();
+		mem->contents=shm2();*/
+		mem=init_mem(MEM_SIZE);
 		memcpy(mem->contents, post_load_mem->contents, post_load_mem->len);
     }
     interp->result = stat_name(STAT_AOK);
@@ -1580,7 +1581,7 @@ void do_mem_stage()
 		{
 			sim_log("\tMemory: Read 0x%x from 0x%x\n",
 		  valm, mem_addr);
-			printf("writing memory...\n");
+			printf("writing memory...Read 0x%x from 0x%x\n", valm, mem_addr);
 			set_word_val(mem, mem_addr, 1);
 		}
 		
