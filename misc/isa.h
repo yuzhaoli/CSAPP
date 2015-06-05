@@ -5,7 +5,7 @@
        Changed J_XX and jump_t to C_XX and cond_t; take_branch to cond_holds
        Expanded RRMOVL to include conditional moves
 */
-
+#pragma once
 /**************** Registers *************************/
 
 /* REG_NONE is a special one to indicate no register */
@@ -76,6 +76,29 @@ instr_ptr find_instr(char *name);
 /* Return invalid instruction for error handling purposes */
 instr_ptr bad_instr();
 
+/*********** IPC stuff **************/
+
+
+
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <stdio.h>
+#include<signal.h>
+#include<unistd.h>
+typedef struct {
+	//each consists of 1 word
+  volatile char hasMessage;
+  int msgAddr;
+  int msgVal;
+  int pid[4];//pid position for each core; core=2?
+} system_status;
+#define SHMKEY1 16144
+#define SHMKEY2 23012 
+void* shm1();
+void* shm2();
+
+
 /***********  Implementation of Memory *****************/
 typedef unsigned char byte_t;
 typedef int word_t;
@@ -93,11 +116,12 @@ typedef struct {
   int len;
   word_t maxaddr;
   byte_t *contents;
-  cache_line *L1cache;
+  //cache_line *L1cache;
 } mem_rec, *mem_t;
 
 /* Create a memory with len bytes */
 mem_t init_mem(int len);
+mem_t raw_init_mem(int len);
 void free_mem(mem_t m);
 
 /* Set contents of memory to 0 */
@@ -119,6 +143,7 @@ bool_t diff_mem(mem_t oldm, mem_t newm, FILE *outfile);
 
 /* Load memory from .yo file.  Return number of bytes read */
 int load_mem(mem_t m, FILE *infile, int report_error);
+int load_mem_raw(mem_t m, FILE *infile, int report_error);
 
 /* Get byte from memory */
 bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest);

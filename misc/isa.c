@@ -223,15 +223,29 @@ void take_msg()
 	int addr=SYS->msgAddr;
 	int cont=SYS->msgVal;
 	int lpos=addr%L1size;
-	if(L1Cache[lpos].isValid==1 && L1Cache[lpos].myAddr==addr)
+	byte_t* ext_mem=(byte_t*) shm2();
+	if(SYS->msgType == MSG_WRITE_SYNC)
 	{
-		L1Cache[lpos].myContent=cont;
-		L1Cache[lpos].isDirty=0;
-		//do mem update!
+		
+		if(L1Cache[lpos].isValid==1 && L1Cache[lpos].myAddr==addr)
+		{
+			L1Cache[lpos].myContent=cont;
+			L1Cache[lpos].isDirty=0;
+			//do mem update!
+		}
+		else
+		{
+			//update miss; do nothing.
+		}
 	}
-	else
-	{
-		//update miss; do nothing.
+	else if(SYS->msgType == MSG_READ_WB){
+		if(L1Cache[lpos].isValid==1 && L1Cache[lpos].myAddr==addr)//cache matched, may need WB
+		if(L1Cache[lpos].isDirty)//yes, we need Write Back
+		{
+			ext_mem[addr]=L1Cache[lpos].myContent=cont;
+			L1Cache[lpos].isDirty=0;
+			//do mem update!
+		}
 	}
 	SYS->hasMessage=0;
 }
@@ -247,7 +261,7 @@ void sig_send(){
 	ret = kill(peer_pid(),SIGUSR1);
 	printf("signal sent to %d; ret : %d\n",peer_pid(), ret);
 }
-void send_msg(int addr, int value)
+void send_msg_writesync(int addr, int value)
 {
 	int fd;
 	struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
@@ -284,6 +298,48 @@ void send_msg(int addr, int value)
 		}//no one to receive the message...
 	SYS->msgAddr=addr;
 	SYS->msgVal=value;
+	SYS->msgType=MSG_WRITE_SYNC;
+	printf("send sys sigusr\n");
+	sig_send();
+	printf("waiting for taking msg\n");
+	usleep(1000/10);//1ms/10
+	while(SYS->hasMessage==1)
+	{
+		usleep(1000*10);
+	}
+	printf("taken.unclocking..\n");
+	fl.l_type = F_UNLCK;
+	fcntl(fd, F_SETLK, &fl);	
+}
+
+void send_msg_readmiss(int addr)
+{
+	int fd;
+	struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
+	printf("sending READ message: %d=%x\n",addr);
+	
+	fd = open(mpi_lockfile, O_CREAT | O_RDWR);
+    fcntl(fd, F_SETLKW, &fl);
+	printf("Lock acquired; hasMsg:%d\n",SYS->hasMessage);
+	if(SYS->hasMessage)take_msg();
+	printf("MPI lock acquired and msg cleared!");
+	//assert hasMessage=0
+	SYS->hasMessage+=1;
+	//assert hasMessage=1
+	if(SYS->hasMessage!=1)
+	{
+		printf("MPI acquire failed?\n");exit(1);
+	}
+	if(peer_pid()==0){
+		printf(" no peer\n!");
+		SYS->hasMessage=0;
+		fl.l_type = F_UNLCK;
+		fcntl(fd, F_SETLK, &fl);
+		return;
+		}//no one to receive the message...
+	SYS->msgAddr=addr;
+	SYS->msgVal=0;
+	SYS->msgType=MSG_READ_WB;
 	printf("send sys sigusr\n");
 	sig_send();
 	printf("waiting for taking msg\n");
@@ -652,12 +708,12 @@ bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
 	}
 	
 	if(L1Cache[cache_pos].isValid==1 && L1Cache[cache_pos].myAddr==pos)//hit?
-	{
+	{//dirty or clean, it doesn't matter??
 		*dest=L1Cache[cache_pos].myContent;
 	}
 	else//miss
 	{
-		//before eviction, need to write-back
+		//before eviction, need to write-back; need to notify peer to write-back too.
 		p0=L1line*(pos/L1line);
 		for(pi=p0;pi<p0+L1line;pi++)
 		{
@@ -671,11 +727,14 @@ bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
 			L1Cache[cache_pos].isDirty=0;
 			L1Cache[cache_pos].isValid=1;
 			L1Cache[cache_pos].myAddr=pi;
+			send_msg_readmiss(pi);
 			L1Cache[cache_pos].myContent=m->contents[pi];
+			if(pi==pos)
+				*dest=L1Cache[cache_pos].myContent;
 		}
 		
-		cache_pos=pos%L1size;
-		*dest=L1Cache[cache_pos].myContent;
+		//cache_pos=pos%L1size;
+		//*dest=L1Cache[cache_pos].myContent;
 	}
     return TRUE;
 }
@@ -728,10 +787,10 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 		//broadcast? only when clean->dirty! or always! (note: it's possible that A read, A write, dirty, then B read, then A write (should also broadcast here); )
 		L1Cache[cache_pos].isDirty=1;
 		L1Cache[cache_pos].myContent=val;
-		send_msg(pos,val);
+		send_msg_writesync(pos,val);
 		//broadcast??
 	}
-	else
+	else//miss
 	{
 		//before eviction, need to write-back; no need to writeback whole cacheline!
 		if(L1Cache[cache_pos].isValid==1 &&L1Cache[cache_pos].isDirty==1)
@@ -749,7 +808,7 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 		L1Cache[cache_pos].myAddr=pos;
 		//also need to broadcast
 		L1Cache[cache_pos].myContent=val;
-		send_msg(pos,val);
+		send_msg_writesync(pos,val);
 	}
     return TRUE;
 }
