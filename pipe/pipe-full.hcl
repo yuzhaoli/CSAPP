@@ -26,6 +26,21 @@
 # R[rB]=valE
 # PC=valP
 #
+#
+###testset:
+# valP=PC+6
+# rA:rB=M[PC+1]
+# valC=M[PC+2]
+# --
+# valB=R[rB]
+# valE=valB+valC
+# valM=M[valE]
+# --
+# R[rA]=valM
+# M[valE]=1 #IMPORTANT!
+# PC=valP
+######
+# (Implemented in psim.c due to atomicity!)
 ####################################################################
 #    HCL Description of Control for Pipelined Y86 Processor        #
 #    Copyright (C) Randal E. Bryant, David R. O'Hallaron, 2010     #
