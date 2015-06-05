@@ -1,9 +1,7 @@
 	.pos 0
 init:	
-	#xorl %eax,%eax
-	#testset 1023(%eax), %ebx	#use $1023 as memory test&set position
 	irmovl testsetloc,%eax
-	testset 0(%eax),%ebx
+	testset 0(%eax),%ebx #use $1023 as memory test&set position
 	nop	
 	nop	#need to wait for two cycles, since for test&set the WB and Read is in the same stage (while for traditional ops it's on two different stage)
 	andl %ebx, %ebx	#set cond code
@@ -239,7 +237,9 @@ MP_len:
 	
 Core0:
 # %eax=sum, %ebx=LEN, %ecx=i, %edx=tmp hasmessage, %esi=??
-	irmovl $30,%ebx	#LEN=100
+	#irmovl $100,%ebx	#LEN=100
+	irmovl MAX_LENGTH,%edx
+	mrmovl (%edx),%ebx
 	jmp CopyMsg
 	Waiting_Message_Taken:
 		nop
@@ -250,25 +250,13 @@ Core0:
 		#mrmovl MP_len, %edx
 		andl %edx,%edx	#test %edx
 		jne Waiting_Message_Taken	#while(MP_len!=0)
-	CheckPong:
-		rrmovl %ebx,%ecx
-		addl %ecx, %ecx
-		addl %ecx, %ecx # addr*=4
-		xorl %eax,%eax
-		CheckPongLoop:
-			mrmovl 400(%ecx),%edx
-			addl %edx,%eax	#sum+=tmp
-			#iaddl 0xffffffff,%ecx	#i-=1, addr-=4
-			irmovl $4,%edx
-			subl %edx,%ecx
-			jg CheckPongLoop
-			
-		rrmovl %eax,%esi
+	jmp CheckPong ##should read back the reply message, and calculate the sum
 		
 	CopyMsg:
-		irmovl $0,%eax
-		irmovl $10,%edx
-		subl %edx,%ebx	#LEN-=10
+		xorl %eax,%eax
+		irmovl LENGTH_STEP,%edx
+		mrmovl 0(%edx),%edx
+		subl %edx,%ebx	#LEN-=LENGTH_STEP
 		jle Done0	#if(LEN==0) goto Done
 		#for(i=LEN;i>0;i--)buffer[i]=data[i]
 		#sum0=%eax
@@ -294,13 +282,29 @@ Core0:
 		#mrmovl 0(MP_len),%esi
 		jmp Waiting_Message_Taken
 	
+	CheckPong:
+		rrmovl %ebx,%ecx
+		addl %ecx, %ecx
+		addl %ecx, %ecx # addr*=4
+		xorl %eax,%eax
+		CheckPongLoop:
+			mrmovl 400(%ecx),%edx
+			addl %edx,%eax	#sum+=tmp
+			#iaddl 0xffffffff,%ecx	#i-=1, addr-=4
+			irmovl $4,%edx
+			subl %edx,%ecx
+			jg CheckPongLoop
+			
+		rrmovl %eax,%esi
+		jmp CopyMsg
+		
 	Done0:
 		irmovl $1025,%ebx
 		irmovl MP_len, %edx
 		rmmovl %ebx,(%edx)
 		#rmmovl %ebx, 0(MP_len) #send too long msg len to halt the 2nd cpu
 		irmovl $1,%edi
-		jmp ToHalt
+		jmp BeforeHalt
 
 Core1:
 # %eax=sum, %ebx=LEN, %ecx=i, %edx=tmp 
@@ -318,7 +322,7 @@ Core1:
 		subl %ebx,%edx #tmp-=len
 		jle Done1
 		
-		irmovl $0,%eax
+		xorl %eax,%eax
 		#for(i=LEN;i>0;i--)
 		#	sum+=buffer[i], 
 		#	buffer[i]=0;
@@ -348,8 +352,8 @@ Core1:
 		jmp Waiting_Message_Arrive
 	Done1:
 		irmovl $2,%edi
-		jmp ToHalt
-	ToHalt:
+		jmp BeforeHalt
+	BeforeHalt:
 		xorl %eax,%eax
 		xorl %ebx,%ebx
 		xorl %ecx,%ecx
@@ -362,10 +366,11 @@ Core1:
 	.long 0xffff
 	.long 0xffff
 	.long 0xffff
-	
-.pos 1023
-	.long 0x0 #test&set location!
 .pos 1500
 sum0:	.long 0x0
 sum1:	.long 0x0
 testsetloc:	.long 0x0
+#MAX_LENGTH:	.long 0x64 # 100
+#LENGTH_STEP:	.long 0x1 # 1
+MAX_LENGTH:	.long 0x1e # 30
+LENGTH_STEP:	.long 0xa # 10
