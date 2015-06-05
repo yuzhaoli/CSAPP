@@ -27,6 +27,12 @@
 #define MAXBUF 1024
 #define TKARGS 3
 
+//for flie locking:
+#include <fcntl.h>
+#include <unistd.h>
+#ifndef lockfile
+#define lockfile "/var/lock/CSAPP_testset.lock"
+#endif
 
 /***************
  * Begin Globals
@@ -1544,6 +1550,9 @@ int gen_m_stat();
 
 void do_mem_stage()
 {
+	int fd;
+	struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
+	
     bool_t read = gen_mem_read();
 
     word_t valm = 0;
@@ -1555,16 +1564,24 @@ void do_mem_stage()
 
 	if(read && mem_write)
 	{
-		printf("Test&Set!\n");
+		printf("Test&Set! locking...");
+		
+		fd = open(lockfile, O_CREAT | O_RDWR);
+		fcntl(fd, F_SETLKW, &fl);
+		
+		printf("locked.\n");
 		dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
 		if (!dmem_error)
-		sim_log("\tMemory: Read 0x%x from 0x%x\n",
+		{
+			sim_log("\tMemory: Read 0x%x from 0x%x\n",
 		  valm, mem_addr);
-		  else
-		  {
 			printf("writing memory...\n");
 			set_word_val(mem, mem_addr, 1);
 		}
+		
+		fl.l_type = F_UNLCK;
+		fcntl(fd, F_SETLK, &fl);
+		printf("Unlocked.\n");
 	}
     else if (read) {
 	dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
