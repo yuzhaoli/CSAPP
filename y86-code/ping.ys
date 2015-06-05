@@ -6,7 +6,7 @@ init:
 	testset 0(%eax),%ebx
 	nop	
 	nop	#need to wait for two cycles, since for test&set the WB and Read is in the same stage (while for traditional ops it's on two different stage)
-	andl $ebx, $ebx	#set cond code
+	andl %ebx, %ebx	#set cond code
 	je initiscz
 	irmovl $6000, %esp  	# Set up Stack pointer
 	irmovl $6000, %ebp  	# Set up base pointer
