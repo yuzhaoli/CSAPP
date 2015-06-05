@@ -115,7 +115,6 @@ instr_t instruction_set[] =
     {"leave",  HPACK(I_LEAVE, F_NONE), 1, NO_ARG, 0, 0, NO_ARG, 0, 0 },
     /* test&set is similar to mrmovl */
     {"testset",   HPACK(I_TESTSET, F_NONE) , 6, M_ARG, 1, 0, R_ARG, 1, 1 },
-
     /* For allocation instructions, arg1hi indicates number of bytes */
     {".byte",  0x00, 1, I_ARG, 0, 1, NO_ARG, 0, 0 },
     {".word",  0x00, 2, I_ARG, 0, 2, NO_ARG, 0, 0 },
@@ -237,10 +236,12 @@ void take_msg()
 		{
 			L1Cache[lpos].myContent=cont;
 			L1Cache[lpos].isDirty=0;
+			printf("WRITEMSG update L1:%d=%x\n",lpos,L1Cache[lpos].myContent);
 			//do mem update!
 		}
 		else
 		{
+			printf("WRITEMSG L1 miss. cachepos:%d isV:%d curraddr:%d\n",lpos,L1Cache[lpos].isValid, L1Cache[lpos].myAddr);
 			//update miss; do nothing.
 		}
 	}
@@ -251,9 +252,9 @@ void take_msg()
 		if(L1Cache[lpos].isValid==1 && L1Cache[lpos].myAddr==addr)//cache matched, may need WB
 		if(L1Cache[lpos].isDirty)//yes, we need Write Back
 		{
-			ext_mem[addr]=L1Cache[lpos].myContent=cont;
+			ext_mem[addr]=L1Cache[lpos].myContent;
 			L1Cache[lpos].isDirty=0;
-			printf("Wrote back.\n");
+			printf("Wrote back. extmem %d=%x\n",addr,ext_mem[addr]);
 			//do mem update!
 		}
 		else 
@@ -295,9 +296,9 @@ void send_msg_writesync(int addr, int value)
 	
 	fd = open(mpi_lockfile, O_CREAT | O_RDWR);
     fcntl(fd, F_SETLKW, &fl);
-	printf("Lock acquired; hasMsg:%d\n",SYS->hasMessage);
+	//printf("Lock acquired; hasMsg:%d\n",SYS->hasMessage);
 	if(SYS->hasMessage)take_msg();
-	printf("MPI lock acquired and msg cleared!");
+	//printf("MPI lock acquired and msg cleared!");
 	//assert hasMessage=0
 	SYS->hasMessage+=1;
 	
@@ -318,13 +319,13 @@ void send_msg_writesync(int addr, int value)
 	SYS->msgType=MSG_WRITE_SYNC;
 	printf("send sys sigusr\n");
 	sig_send();
-	printf("waiting for taking msg\n");
+	//printf("waiting for taking msg\n");
 	usleep(1000/10);//1ms/10
 	while(SYS->hasMessage==1)
 	{
 		usleep(1000*10);
 	}
-	printf("taken.unclocking..\n");
+	//printf("taken.unclocking..\n");
 	fl.l_type = F_UNLCK;
 	fcntl(fd, F_SETLK, &fl);	
 }
@@ -338,13 +339,15 @@ void send_msg_readmiss(int addr)
 	#endif
 	int fd;
 	struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
-	printf("sending READ message: %d=%x\n",addr);
+	
+	byte_t* ext_mem=(byte_t*) shm2();
+	printf("sending READ message: %d=%x\n",addr,ext_mem[addr]);
 	
 	fd = open(mpi_lockfile, O_CREAT | O_RDWR);
     fcntl(fd, F_SETLKW, &fl);
-	printf("Lock acquired; hasMsg:%d\n",SYS->hasMessage);
+	//printf("Lock acquired; hasMsg:%d\n",SYS->hasMessage);
 	if(SYS->hasMessage)take_msg();
-	printf("MPI lock acquired and msg cleared!");
+	//printf("MPI lock acquired and msg cleared!");
 	//assert hasMessage=0
 	SYS->hasMessage+=1;
 	//assert hasMessage=1
@@ -364,13 +367,13 @@ void send_msg_readmiss(int addr)
 	SYS->msgType=MSG_READ_WB;
 	printf("send sys sigusr\n");
 	sig_send();
-	printf("waiting for taking msg\n");
+	//printf("waiting for taking msg\n");
 	usleep(1000/10);//1ms/10
 	while(SYS->hasMessage==1)
 	{
 		usleep(1000*10);
 	}
-	printf("taken.unclocking..\n");
+	//printf("taken.unclocking..\n");
 	fl.l_type = F_UNLCK;
 	fcntl(fd, F_SETLK, &fl);	
 }
@@ -379,13 +382,13 @@ void sig_handler(int signo)
 {
     if (signo == SIGUSR1)
 	{
-        printf("received SIGUSR1; hasMsg:%d\n",SYS->hasMessage);
+       // printf("received SIGUSR1; hasMsg:%d\n",SYS->hasMessage);
 		//while(SYS->hasMessage)
 			take_msg();
 	}
 	else
 	{
-        printf("received signal:%d; hasMsg:%d\n",signo, SYS->hasMessage);
+        printf("received strange signal:%d; hasMsg:%d\n",signo, SYS->hasMessage);
 	}
 }
 
@@ -719,6 +722,7 @@ int load_mem_raw(mem_t m, FILE *infile, int report_error)//for backup diff; no G
 //}
 bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
 {
+	byte_t* ext_mem=(byte_t*) shm2();//for debugging only
 	word_t cache_pos=pos%L1size;
 	word_t pi,p0;
     if (pos < 0 || pos >= m->len)
@@ -756,7 +760,8 @@ bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
 				*dest=L1Cache[cache_pos].myContent;
 		}
 		
-		printf("Read misssig done:%d=%x\n",pos,m->contents[pos]);
+		printf("Read miss done:%d=%x\n",pos,m->contents[pos]);
+		printf("Comparison: extmem %d=%x",pos,ext_mem[pos]);
 		//cache_pos=pos%L1size;
 		//*dest=L1Cache[cache_pos].myContent;
 	}
