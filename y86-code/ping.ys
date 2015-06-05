@@ -1,21 +1,25 @@
 	.pos 0
 init:	
-	xorl %eax,%eax
-	testset 1023(%eax), %ebx
-	nop
-	iaddl $0, $ebx	#set cond code
+	#xorl %eax,%eax
+	#testset 1023(%eax), %ebx	#use $1023 as memory test&set position
+	irmovl testsetloc,%eax
+	testset 0(%eax),%ebx
+	nop	
+	nop	#need to wait for two cycles, since for test&set the WB and Read is in the same stage (while for traditional ops it's on two different stage)
+	andl $ebx, $ebx	#set cond code
 	je initiscz
-	irmovl $800, %esp  	# Set up Stack pointer
-	irmovl $800, %ebp  	# Set up base pointer
+	irmovl $6000, %esp  	# Set up Stack pointer
+	irmovl $6000, %ebp  	# Set up base pointer
 	jmp Core1		# Execute main program
 initiscz:	
-	irmovl $400, %esp  	# Set up Stack pointer
-	irmovl $400, %ebp  	# Set up base pointer
+	irmovl $7000, %esp  	# Set up Stack pointer
+	irmovl $7000, %ebp  	# Set up base pointer
 	jmp Core0		# Execute main program
 
+	.pos 200
 # Array of 100 elements
 	.align 4
-array:	.long 0xd
+data:	.long 0xd
 	.long 0xb00
 	.long 0xb00
 	.long 0xb00
@@ -121,6 +125,8 @@ array:	.long 0xd
 	.long 0xb00
 MP_len:
 	.long 0x0
+	
+	.pos 400
 MP_buf:
 	.long 0x0
 	.long 0x0
@@ -223,39 +229,80 @@ MP_buf:
 	.long 0x0
 	.long 0x0
 
-
+#data=200: int[100]
+#MP_len: the length of message if >0, no message if ==0
+#MP_buf=400: buffer for message
 
 Core0:
-
-
-
-
+# %eax=sum, %ebx=LEN, %ecx=i, %edx=tmp hasmessage, %esi=??
+	irmovl $1000,%ebx	#LEN=100
+	jmp CopyMsg
+	Waiting_Message_Taken:
+		nop
+		nop
+		nop
+		mrmovl MP_len, %edx
+		andl %edx,%edx	#test %edx
+		jne Waiting_Message_Taken	#while(MP_len!=0)
+	
+	CopyMsg:
+		irmovl $0,%eax
+		irmovl $10,%edx
+		subl %ebx,%edx	#LEN-=10
+		jle Done0	#if(LEN==0) goto Done
+		#for(i=LEN;i>0;i--)buffer[i]=data[i]
+		#sum0=%eax
+		rrmovl %ebx,%ecx
+			CopyMsgLoop:
+			mrmovl 200(%ecx),%edx
+			rmmovl %edx,400(%ecx)
+			addl %edx,%eax
+			iaddl 0xffffffff,%ecx
+			jg CopyMsgLoop
+		rmmovl %eax, sum0
+		rmmovl %ebx, MP_len
+		jmp Waiting_Message_Taken
+	
+	Done0:
+		irmovl $1025,%ebx
+		rmmovl %ebx, MP_len #send too long msg len to halt the 2nd cpu
+		halt
 
 Core1:
+# %eax=sum, %ebx=LEN, %ecx=i, %edx=tmp 
+	Waiting_Message_Arrive:
+		nop
+		mrmovl MP_len, %ebx
+		andl %ebx,%ebx	#test %ebx
+		je Waiting_Message_Arrive #while(MP_len==0)
+	ReadMsg:
+		#if(len>1024)goto Done
+		irmovl $1024,%edx
+		subl %ebx,%edx #tmp-=len ??
+		jle Done1
+		
+		irmovl $0,%eax
+		#for(i=LEN;i>0;i--)
+		#	sum+=buffer[i], 
+		#	buffer[i]=0;
+		#sum1=%eax
+		rrmovl %ebx,%ecx
+		ReadMsgLoop:
+			mrmovl 400(%ecx),%edx
+			addl %edx,%eax
+			xorl %edx,%edx
+			rmmovl %edx,400(%ecx)
+			iaddl 0xffffffff,%ecx
+			jg ReadMsgLoop
+		rmmovl %eax,sum1
+	TakeMsg:
+		xorl %edx,%edx
+		rmmovl %edx,MP_len
+		jmp Waiting_Message_Arrive
+	Done1:
+		halt
 
-
-
-Main:	irmovl $4,%eax
-	pushl %eax	# Push 4
-	irmovl array,%edx
-	pushl %edx      # Push array
-	call Sum	# Sum(array, 4)
-	halt
-
-	# int Sum(int *Start, int Count)
-Sum:	pushl %ebp
-	rrmovl %esp,%ebp
-	mrmovl 8(%ebp),%ecx 	# ecx = Start
-	mrmovl 12(%ebp),%edx	# edx = Count
-	irmovl $0, %eax		# sum = 0
-	andl   %edx,%edx
-	je     End
-Loop:	mrmovl (%ecx),%esi   # get *Start
-	addl %esi,%eax       # add to sum
-	iaddl  $4,%ecx       # Sum++
-        iaddl  $-1,%edx      # Count--
-	jne    Loop          # Stop when 0
-End:	popl %ebp
-	ret
-/* $end code-ysa */
-/* $end code-yso */
+.pos 1000
+sum0:	.long 0x0
+sum1:	.long 0x0
+testsetloc:	.long 0x0
