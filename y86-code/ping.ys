@@ -256,8 +256,7 @@ Core0:
 		addl %ecx, %ecx # addr*=4
 		xorl %eax,%eax
 		CheckPongLoop:
-			mrmovl 200(%ecx),%edx
-			rmmovl %edx,400(%ecx)
+			mrmovl 400(%ecx),%edx
 			addl %edx,%eax	#sum+=tmp
 			#iaddl 0xffffffff,%ecx	#i-=1, addr-=4
 			irmovl $4,%edx
