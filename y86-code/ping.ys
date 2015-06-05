@@ -10,11 +10,14 @@ init:
 	je initiscz
 	irmovl $6000, %esp  	# Set up Stack pointer
 	irmovl $6000, %ebp  	# Set up base pointer
+	irmovl $2,%esi
 	jmp Core1		# Execute main program
 initiscz:	
 	irmovl $7000, %esp  	# Set up Stack pointer
 	irmovl $7000, %ebp  	# Set up base pointer
+	irmovl $1,%esi
 	jmp Core0		# Execute main program
+	
 
 	.pos 200
 # Array of 100 elements
@@ -248,7 +251,7 @@ Core0:
 	CopyMsg:
 		irmovl $0,%eax
 		irmovl $10,%edx
-		subl %ebx,%edx	#LEN-=10
+		subl %edx,%ebx	#LEN-=10
 		jle Done0	#if(LEN==0) goto Done
 		#for(i=LEN;i>0;i--)buffer[i]=data[i]
 		#sum0=%eax
@@ -256,7 +259,7 @@ Core0:
 			CopyMsgLoop:
 			mrmovl 200(%ecx),%edx
 			rmmovl %edx,400(%ecx)
-			addl %edx,%eax
+			addl %edx,%eax	#sum+=tmp
 			iaddl 0xffffffff,%ecx
 			jg CopyMsgLoop
 		rmmovl %eax, sum0
@@ -266,6 +269,7 @@ Core0:
 	Done0:
 		irmovl $1025,%ebx
 		rmmovl %ebx, MP_len #send too long msg len to halt the 2nd cpu
+		irmovl $1,%edi
 		halt
 
 Core1:
@@ -278,7 +282,7 @@ Core1:
 	ReadMsg:
 		#if(len>1024)goto Done
 		irmovl $1024,%edx
-		subl %ebx,%edx #tmp-=len ??
+		subl %ebx,%edx #tmp-=len
 		jle Done1
 		
 		irmovl $0,%eax
@@ -300,7 +304,9 @@ Core1:
 		rmmovl %edx,MP_len
 		jmp Waiting_Message_Arrive
 	Done1:
+		irmovl $2,%edi
 		halt
+		
 
 .pos 1000
 sum0:	.long 0x0
