@@ -255,6 +255,7 @@ void send_msg(int addr, int value)
 	{
 		printf("Test&Set failed?\n");exit(1);
 	}
+	if(peer_pid()==0){SYS->hasMessage=0;return;}//no one to receive the message...
 	SYS->msgAddr=addr;
 	SYS->msgVal=value;
 	sig_send();
