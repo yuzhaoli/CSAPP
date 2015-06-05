@@ -259,6 +259,8 @@ Core0:
 		#for(i=LEN;i>0;i--)buffer[i]=data[i]
 		#sum0=%eax
 		rrmovl %ebx,%ecx
+		addl %ecx, %ecx
+		addl %ecx, %ecx # addr*=4
 			CopyMsgLoop:
 			mrmovl 200(%ecx),%edx
 			rmmovl %edx,400(%ecx)
@@ -307,6 +309,8 @@ Core1:
 		#	buffer[i]=0;
 		#sum1=%eax
 		rrmovl %ebx,%ecx
+		addl %ecx, %ecx
+		addl %ecx, %ecx # addr*=4
 		ReadMsgLoop:
 			mrmovl 400(%ecx),%edx
 			addl %edx,%eax
