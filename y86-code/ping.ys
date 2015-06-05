@@ -120,7 +120,7 @@ data:	.long 0xd
 	.long 0x1
 	.long 0x1
 	.long 0x1	
-	.pos 400
+	.pos 600
 MP_buf:
 	.long 0x0
 	.long 0x0
@@ -221,17 +221,18 @@ MP_buf:
 	.long 0x0
 	.long 0x0
 	.long 0x0
-	.long 0x0
+	.long 0x0	
+	
+	#.pos 1200
 MP_len:
 	.long 0x0
 
 #data=200: int[100]
 #MP_len: the length of message if >0, no message if ==0
-#MP_buf=400: buffer for message
+#MP_buf=600: buffer for message
 
 	.long 0xffff
 	.long 0xffff
-	.pos 850
 	.long 0xffff
 	.long 0xffff
 	
@@ -264,8 +265,8 @@ Core0:
 		addl %ecx, %ecx
 		addl %ecx, %ecx # addr*=4
 			CopyMsgLoop:
-			mrmovl 200(%ecx),%edx
-			rmmovl %edx,400(%ecx)
+			mrmovl data(%ecx),%edx
+			rmmovl %edx,MP_buf(%ecx)
 			addl %edx,%eax	#sum+=tmp
 			#iaddl 0xffffffff,%ecx	#i-=1, addr-=4
 			irmovl $4,%edx
@@ -288,7 +289,7 @@ Core0:
 		addl %ecx, %ecx # addr*=4
 		xorl %eax,%eax
 		CheckPongLoop:
-			mrmovl 400(%ecx),%edx
+			mrmovl MP_buf(%ecx),%edx
 			addl %edx,%eax	#sum+=tmp
 			#iaddl 0xffffffff,%ecx	#i-=1, addr-=4
 			irmovl $4,%edx
@@ -331,10 +332,10 @@ Core1:
 		addl %ecx, %ecx
 		addl %ecx, %ecx # addr*=4
 		ReadMsgLoop:
-			mrmovl 400(%ecx),%edx
+			mrmovl MP_buf(%ecx),%edx
 			addl %edx,%eax
 			addl %edx,%edx
-			rmmovl %edx,400(%ecx)	#write back, buf[i]*=2
+			rmmovl %edx,MP_buf(%ecx)	#write back, buf[i]*=2
 			#isubl $1,%ecx 
 			irmovl $4,%edx
 			subl %edx,%ecx
