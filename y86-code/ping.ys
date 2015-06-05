@@ -23,112 +23,105 @@ initiscz:
 # Array of 100 elements
 	.align 4
 data:	.long 0xd
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
 	.long 0xc0
 	.long 0xa000
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
 	.long 0xc0
 	.long 0xa000
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
 	.long 0xc0
 	.long 0xa000
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
 	.long 0xc0
 	.long 0xa000
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-	.long 0xb00
-MP_len:
-	.long 0x0
-	
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1	
 	.pos 400
 MP_buf:
 	.long 0x0
@@ -231,20 +224,30 @@ MP_buf:
 	.long 0x0
 	.long 0x0
 	.long 0x0
+MP_len:
+	.long 0x0
 
 #data=200: int[100]
 #MP_len: the length of message if >0, no message if ==0
 #MP_buf=400: buffer for message
 
+	.long 0xffff
+	.long 0xffff
+	.pos 850
+	.long 0xffff
+	.long 0xffff
+	
 Core0:
 # %eax=sum, %ebx=LEN, %ecx=i, %edx=tmp hasmessage, %esi=??
-	irmovl $1000,%ebx	#LEN=100
+	irmovl $30,%ebx	#LEN=100
 	jmp CopyMsg
 	Waiting_Message_Taken:
 		nop
 		nop
 		nop
-		mrmovl MP_len, %edx
+		irmovl MP_len, %edx
+		mrmovl (%edx),%edx
+		#mrmovl MP_len, %edx
 		andl %edx,%edx	#test %edx
 		jne Waiting_Message_Taken	#while(MP_len!=0)
 	
@@ -260,15 +263,26 @@ Core0:
 			mrmovl 200(%ecx),%edx
 			rmmovl %edx,400(%ecx)
 			addl %edx,%eax	#sum+=tmp
-			iaddl 0xffffffff,%ecx
+			#iaddl 0xffffffff,%ecx
+			irmovl $1,%edx
+			subl %edx,%ecx
 			jg CopyMsgLoop
-		rmmovl %eax, sum0
-		rmmovl %ebx, MP_len
+			
+		irmovl sum0, %edx
+		rmmovl %eax,(%edx)
+		irmovl MP_len, %edx
+		rmmovl %ebx,(%edx)
+		mrmovl (%edx),%esi
+		#rmmovl %eax, 0(sum0)
+		#rmmovl %ebx, 0(MP_len)
+		#mrmovl 0(MP_len),%esi
 		jmp Waiting_Message_Taken
 	
 	Done0:
 		irmovl $1025,%ebx
-		rmmovl %ebx, MP_len #send too long msg len to halt the 2nd cpu
+		irmovl MP_len, %edx
+		rmmovl %ebx,(%edx)
+		#rmmovl %ebx, 0(MP_len) #send too long msg len to halt the 2nd cpu
 		irmovl $1,%edi
 		halt
 
@@ -276,7 +290,9 @@ Core1:
 # %eax=sum, %ebx=LEN, %ecx=i, %edx=tmp 
 	Waiting_Message_Arrive:
 		nop
-		mrmovl MP_len, %ebx
+		irmovl MP_len, %edx
+		mrmovl (%edx),%ebx
+		#mrmovl 0(MP_len), %ebx
 		andl %ebx,%ebx	#test %ebx
 		je Waiting_Message_Arrive #while(MP_len==0)
 	ReadMsg:
@@ -292,23 +308,70 @@ Core1:
 		#sum1=%eax
 		rrmovl %ebx,%ecx
 		ReadMsgLoop:
-			mrmovl 400(%ecx),%edx
+			nop
+			nop
+			nop
+			nop
+			mrmovl 00400(%ecx),%edx
+			nop
+			nop
+			nop
+			nop			
+			rmmovl %edx,00400(%ecx)
+			nop
+			nop
+			nop
+			nop
 			addl %edx,%eax
 			xorl %edx,%edx
+			nop
+			nop
+			nop
+			nop
 			rmmovl %edx,400(%ecx)
-			iaddl 0xffffffff,%ecx
+			nop
+			nop
+			nop
+			nop
+			#isubl $1,%ecx #bug here!!
+			nop
+			nop
+			nop
+			nop
+			irmovl $1,%edx
+			nop
+			nop
+			nop
+			nop
+			subl %edx,%ecx
+			nop
+			nop
+			nop
+			nop
 			jg ReadMsgLoop
-		rmmovl %eax,sum1
+			nop
+			nop
+			nop
+			nop
+		irmovl sum1, %edx
+		rmmovl %eax,(%edx)
+		#rmmovl %eax,0(sum1)
 	TakeMsg:
-		xorl %edx,%edx
-		rmmovl %edx,MP_len
+		xorl %eax,%eax
+		irmovl MP_len, %edx
+		rmmovl %eax,(%edx)
+		#rmmovl $0,0(MP_len)
 		jmp Waiting_Message_Arrive
 	Done1:
 		irmovl $2,%edi
 		halt
 		
 
-.pos 1000
+	.long 0xffff
+	.long 0xffff
+	.long 0xffff
+	.long 0xffff
+.pos 1500
 sum0:	.long 0x0
 sum1:	.long 0x0
 testsetloc:	.long 0x0
