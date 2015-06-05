@@ -250,7 +250,22 @@ Core0:
 		#mrmovl MP_len, %edx
 		andl %edx,%edx	#test %edx
 		jne Waiting_Message_Taken	#while(MP_len!=0)
-	
+	CheckPong:
+		rrmovl %ebx,%ecx
+		addl %ecx, %ecx
+		addl %ecx, %ecx # addr*=4
+		xorl %eax,%eax
+		CheckPongLoop:
+			mrmovl 200(%ecx),%edx
+			rmmovl %edx,400(%ecx)
+			addl %edx,%eax	#sum+=tmp
+			#iaddl 0xffffffff,%ecx	#i-=1, addr-=4
+			irmovl $4,%edx
+			subl %edx,%ecx
+			jg CheckPongLoop
+			
+		rrmovl %eax,%esi
+		
 	CopyMsg:
 		irmovl $0,%eax
 		irmovl $10,%edx
@@ -297,6 +312,7 @@ Core1:
 		#mrmovl 0(MP_len), %ebx
 		andl %ebx,%ebx	#test %ebx
 		je Waiting_Message_Arrive #while(MP_len==0)
+		
 	ReadMsg:
 		#if(len>1024)goto Done
 		irmovl $1024,%edx
@@ -314,12 +330,14 @@ Core1:
 		ReadMsgLoop:
 			mrmovl 400(%ecx),%edx
 			addl %edx,%eax
-			xorl %edx,%edx
-			rmmovl %edx,400(%ecx)
+			addl %edx,%edx
+			rmmovl %edx,400(%ecx)	#write back, buf[i]*=2
 			#isubl $1,%ecx 
 			irmovl $4,%edx
 			subl %edx,%ecx
 			jg ReadMsgLoop
+			
+		rrmovl %eax,%esi
 		irmovl sum1, %edx
 		rmmovl %eax,(%edx)
 		#rmmovl %eax,0(sum1)
