@@ -220,13 +220,19 @@ const int IS_MULTICORE=1;
 } system_status;*/
 void take_msg()
 {
+	#ifndef CORE0
+	#ifndef CORE1
+	return;//not multicore environment
+	#endif
+	#endif
+	
 	int addr=SYS->msgAddr;
 	int cont=SYS->msgVal;
 	int lpos=addr%L1size;
 	byte_t* ext_mem=(byte_t*) shm2();
 	if(SYS->msgType == MSG_WRITE_SYNC)
 	{
-		
+		printf("WRITEMSG:%d %x\n",addr,cont);
 		if(L1Cache[lpos].isValid==1 && L1Cache[lpos].myAddr==addr)
 		{
 			L1Cache[lpos].myContent=cont;
@@ -239,13 +245,19 @@ void take_msg()
 		}
 	}
 	else if(SYS->msgType == MSG_READ_WB){
+		
+		printf("READMSG:%d\n",addr);
+		
 		if(L1Cache[lpos].isValid==1 && L1Cache[lpos].myAddr==addr)//cache matched, may need WB
 		if(L1Cache[lpos].isDirty)//yes, we need Write Back
 		{
 			ext_mem[addr]=L1Cache[lpos].myContent=cont;
 			L1Cache[lpos].isDirty=0;
+			printf("Wrote back.\n");
 			//do mem update!
 		}
+		else 
+			printf("Not found.\n");
 	}
 	SYS->hasMessage=0;
 }
@@ -263,9 +275,14 @@ void sig_send(){
 }
 void send_msg_writesync(int addr, int value)
 {
+	#ifndef CORE0
+	#ifndef CORE1
+	return;//not multicore environment
+	#endif
+	#endif
 	int fd;
 	struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
-	printf("sending message: %d=%x\n",addr,value);
+	printf("sending WRITE message: %d=%x\n",addr,value);
 	
 	//while(SYS->hasMessage)
 	//{
@@ -314,6 +331,11 @@ void send_msg_writesync(int addr, int value)
 
 void send_msg_readmiss(int addr)
 {
+	#ifndef CORE0
+	#ifndef CORE1
+	return;//not multicore environment
+	#endif
+	#endif
 	int fd;
 	struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
 	printf("sending READ message: %d=%x\n",addr);
@@ -713,6 +735,7 @@ bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
 	}
 	else//miss
 	{
+		printf("Read miss! curr mem val:%d=%x\n",pos,m->contents[pos]);
 		//before eviction, need to write-back; need to notify peer to write-back too.
 		p0=L1line*(pos/L1line);
 		for(pi=p0;pi<p0+L1line;pi++)
@@ -733,6 +756,7 @@ bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
 				*dest=L1Cache[cache_pos].myContent;
 		}
 		
+		printf("Read misssig done:%d=%x\n",pos,m->contents[pos]);
 		//cache_pos=pos%L1size;
 		//*dest=L1Cache[cache_pos].myContent;
 	}
