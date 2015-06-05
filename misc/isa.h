@@ -86,9 +86,11 @@ instr_ptr bad_instr();
 #include <stdio.h>
 #include<signal.h>
 #include<unistd.h>
+typedef enum {MSG_READ_WB, MSG_WRITE_SYNC} msg_type;
 typedef struct {
 	//each consists of 1 word
   volatile char hasMessage;
+  msg_type msgType;
   int msgAddr;
   int msgVal;
   int pid[4];//pid position for each core; core=2?
