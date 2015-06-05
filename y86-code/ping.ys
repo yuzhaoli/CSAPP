@@ -263,8 +263,8 @@ Core0:
 			mrmovl 200(%ecx),%edx
 			rmmovl %edx,400(%ecx)
 			addl %edx,%eax	#sum+=tmp
-			#iaddl 0xffffffff,%ecx
-			irmovl $1,%edx
+			#iaddl 0xffffffff,%ecx	#i-=1, addr-=4
+			irmovl $4,%edx
 			subl %edx,%ecx
 			jg CopyMsgLoop
 			
@@ -313,7 +313,7 @@ Core1:
 			xorl %edx,%edx
 			rmmovl %edx,400(%ecx)
 			#isubl $1,%ecx 
-			irmovl $1,%edx
+			irmovl $4,%edx
 			subl %edx,%ecx
 			jg ReadMsgLoop
 		irmovl sum1, %edx
@@ -337,11 +337,13 @@ Core1:
 		iaddl $0,%edi
 		halt
 		
-
 	.long 0xffff
 	.long 0xffff
 	.long 0xffff
 	.long 0xffff
+	
+.pos 1023
+	.long 0x0 #test&set location!
 .pos 1500
 sum0:	.long 0x0
 sum1:	.long 0x0
