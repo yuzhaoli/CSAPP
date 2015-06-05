@@ -213,13 +213,13 @@ static void run_tty_sim()
 	isa_state = new_state(0);
 	free_mem(isa_state->r);
 	free_mem(isa_state->m);
-	isa_state->m = copy_mem(mem);
-	isa_state->r = copy_mem(reg);
+	isa_state->m = copy_reg(mem);
+	isa_state->r = copy_reg(reg);
 	isa_state->cc = cc;
     }
 
-    mem0 = copy_mem(mem);
-    reg0 = copy_mem(reg);
+    mem0 = copy_reg(mem);
+    reg0 = copy_reg(reg);
     
     icount = sim_run_pipe(instr_limit, 5*instr_limit, &run_status, &result_cc);
     if (verbosity > 0) {
@@ -617,6 +617,7 @@ static void update_state(bool_t update_mem, bool_t update_cc)
 	sim_log("\tDisabled write of 0x%x to address 0x%x\n", mem_data, mem_addr);
     }
     if (update_mem && mem_write) {
+	if(!gen_mem_read())//not test^set instr
 	if (!set_word_val(mem, mem_addr, mem_data)) {
 	    sim_log("\tCouldn't write to address 0x%x\n", mem_addr);
 	} else {
@@ -855,8 +856,15 @@ int simResetCmd(ClientData clientData, Tcl_Interp *interp,
     }
     sim_reset();
     if (post_load_mem) {
-	free_mem(mem);
-	mem = copy_mem(post_load_mem);
+		//printf("Warning: copied main mem; detached from shared mem\n");
+		//free_mem(mem);
+		//mem = copy_reg(post_load_mem);
+		free_mem(mem);
+		printf("Copying post_load_mem into shared memory...\n");
+		mem = (mem_t) malloc(sizeof(mem_rec));
+		mem->len = MEM_SIZE;
+		mem->contents=shm2();
+		memcpy(mem->contents, post_load_mem->contents, post_load_mem->len);
     }
     interp->result = stat_name(STAT_AOK);
     return TCL_OK;
@@ -880,7 +888,7 @@ int simLoadCodeCmd(ClientData clientData, Tcl_Interp *interp,
     }
     sim_reset();
     code_count = load_mem(mem, code_file, 0);
-    post_load_mem = copy_mem(mem);
+    post_load_mem = copy_reg(mem);
     sprintf(tcl_msg, "%d", code_count);
     interp->result = tcl_msg;
     fclose(code_file);
@@ -1545,13 +1553,26 @@ void do_mem_stage()
     mem_write = gen_mem_write();
     dmem_error = FALSE;
 
-    if (read) {
+	if(read && mem_write)
+	{
+		printf("Test&Set!\n");
+		dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
+		if (!dmem_error)
+		sim_log("\tMemory: Read 0x%x from 0x%x\n",
+		  valm, mem_addr);
+		  else
+		  {
+			printf("writing memory...\n");
+			set_word_val(mem, mem_addr, 1);
+		}
+	}
+    else if (read) {
 	dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
 	if (!dmem_error)
 	  sim_log("\tMemory: Read 0x%x from 0x%x\n",
 		  valm, mem_addr);
     }
-    if (mem_write) {
+    else if (mem_write) {
 	word_t sink;
 	/* Do a read of address just to check validity */
 	dmem_error = dmem_error || !get_word_val(mem, mem_addr, &sink);
