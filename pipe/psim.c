@@ -209,6 +209,8 @@ static void run_tty_sim()
     if (verbosity >= 2)
 	printf("%s\n", simname);
 
+	#ifndef CORE1
+	//the second CPU will not load object file into memory.
     byte_cnt = load_mem(mem, object_file, 1);
     if (byte_cnt == 0) {
 	fprintf(stderr, "No lines of code found\n");
@@ -217,6 +219,7 @@ static void run_tty_sim()
 	printf("%d bytes of code read\n", byte_cnt);
     }
     fclose(object_file);
+	#endif
     if (do_check) {
 	isa_state = new_state(0);
 	free_mem(isa_state->r);
