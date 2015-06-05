@@ -34,6 +34,8 @@
 #define lockfile "/var/lock/CSAPP_testset.lock"
 #endif
 
+
+int gen_mem_read();
 /***************
  * Begin Globals
  ***************/
@@ -623,8 +625,8 @@ static void update_state(bool_t update_mem, bool_t update_cc)
 	sim_log("\tDisabled write of 0x%x to address 0x%x\n", mem_data, mem_addr);
     }
     if (update_mem && mem_write) {
-	if(!gen_mem_read())//not test^set instr
-	if (!set_word_val(mem, mem_addr, mem_data)) {
+	//not test^set instr
+	if (!gen_mem_read() && !set_word_val(mem, mem_addr, mem_data)) {
 	    sim_log("\tCouldn't write to address 0x%x\n", mem_addr);
 	} else {
 	    sim_log("\tWrote 0x%x to address 0x%x\n", mem_data, mem_addr);

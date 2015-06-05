@@ -36,13 +36,23 @@ INC=$(TKINC) -I$(MISCDIR) $(GUIMODE)
 LIBS=$(TKLIBS) -lm
 YAS = ../misc/yas
 
-all: psim drivers
+all: psim drivers psimm0 psimm1
 
 # This rule builds the PIPE simulator
 psim: psim.c sim.h pipe-$(VERSION).hcl $(MISCDIR)/isa.c $(MISCDIR)/isa.h
 	# Building the pipe-$(VERSION).hcl version of PIPE
 	$(HCL2C) -n pipe-$(VERSION).hcl < pipe-$(VERSION).hcl > pipe-$(VERSION).c
 	$(CC) $(CFLAGS) $(INC) -o psim psim.c pipe-$(VERSION).c \
+		$(MISCDIR)/isa.c $(LIBS)
+
+psimm0: psim
+	# Building the pipe-$(VERSION).hcl version of PIPE
+	$(CC) $(CFLAGS) -DCORE0 $(INC) -o psimm0 psim.c pipe-$(VERSION).c \
+		$(MISCDIR)/isa.c $(LIBS)
+
+psimm1: psim
+	# Building the pipe-$(VERSION).hcl version of PIPE
+	$(CC) $(CFLAGS) -DCORE1 $(INC) -o psimm1 psim.c pipe-$(VERSION).c \
 		$(MISCDIR)/isa.c $(LIBS)
 
 # This rule builds driver programs for Part C of the Architecture Lab
