@@ -155,6 +155,11 @@ instr_ptr bad_instr()
     return &invalid_instr;
 }
 
+
+#define L1line (8)
+#define L1size (16*L1line)
+
+cache_line L1Cache[L1size];
 /*
   Started IPC section!
   shm1: for IPC, using struct IPCaddr
@@ -162,7 +167,7 @@ instr_ptr bad_instr()
 */
 void* shm1(){
 	int shmid;
-	const int SHMSZ=sizeof(system_status)+1;
+	const int SHMSZ=sizeof(system_status);
     char *shm;
     if ((shmid = shmget(SHMKEY1, SHMSZ, IPC_CREAT | 0666)) < 0) {
         perror("shmget");
@@ -188,12 +193,106 @@ void* shm2(){
     }
     return shm;
 }
+system_status *SYS;
+#ifdef CORE0
+const int coreid=0;
+const int IS_MULTICORE=1;
+#endif
+#ifdef CORE1
+const int coreid=1;
+const int IS_MULTICORE=1;
+#endif
+#ifndef CORE0
+#ifndef CORE1
+	const int coreid=-1;
+	const int IS_MULTICORE=0;
+#endif
+#endif
+/*typedef struct {
+	//each consists of 1 word
+  char hasMessage;
+  int msgAddr;
+  int msgVal;
+  int pid[4];//pid position for each core; core=2?
+} system_status;*/
+void take_msg()
+{
+	int addr=SYS->msgAddr;
+	int cont=SYS->msgVal;
+	int lpos=addr%L1size;
+	if(L1Cache[lpos].isValid==1 && L1Cache[lpos].myAddr==addr)
+	{
+		L1Cache[lpos].myContent=cont;
+		L1Cache[lpos].isDirty=0;
+		//do mem update!
+	}
+	else
+	{
+		//update miss; do nothing.
+	}
+	SYS->hasMessage=0;
+}
+void sig_send(){
+	int ret;
+	int pid=-1;
+	if(coreid==0)pid=SYS->pid[1];
+	if(coreid==1)pid=SYS->pid[0];
+	ret = kill(pid,SIGUSR1);
+	printf("signal sent; ret : %d\n",ret);
+}
+void send_msg(int addr, int value)
+{
+	//while(SYS->hasMessage)
+	//{
+	//	take_msg();usleep(1);
+	//}
+	//SYS->hasMessage=1;
+	while(__sync_lock_test_and_set(&SYS->hasMessage,1)){
+		take_msg();usleep(1);
+	}
+	//assert hasMessage=1
+	if(SYS->hasMessage!=1)
+	{
+		printf("Test&Set failed?\n");exit(1);
+	}
+	SYS->msgAddr=addr;
+	SYS->msgVal=value;
+	sig_send();
+	while(SYS->hasMessage==1)
+	{
+		usleep(10);
+	}
+}
 
+void sig_handler(int signo)
+{
+    if (signo == SIGUSR1)
+	{
+        printf("received SIGUSR1\n");
+		while(SYS->hasMessage)take_msg();
+	}
+}
 
-#define L1line (8)
-#define L1size (16*L1line)
+void IPC_start()
+{
+	if(IS_MULTICORE==0)return;
+	int pid=getpid();
+	
+	printf("Initializing Multicore mode; I'm core#%d, pid#%d\n",coreid,pid);
+	SYS=shm1();
+	SYS->pid[coreid]=pid;
+	
+	
+    if (signal(SIGUSR1, sig_handler) == SIG_ERR)
+	{
+        printf("\nCan't register listener for SIGUSR1??\n");
+		exit(-1);
+	}
+	
+	//debug!!
+	send_msg(1024+coreid*4,0xff);
+}
 
-cache_line L1Cache[L1size];
 //kAc Marked at 21:00, 5.16
 //得到一个初始化过的内存，共计len个byte
 //分配一段内存
@@ -211,7 +310,10 @@ mem_t init_mem(int len)
 		result->contents=(byte_t *) shm2();
 	}
 	else
+	{
 		result->contents = (byte_t *) calloc(len, 1);
+		IPC_start();
+	}
     return result;
 }
 
@@ -419,15 +521,11 @@ int load_mem_raw(mem_t m, FILE *infile, int report_error)//for backup diff; no G
     int byte_cnt = 0;
     int lineno = 0;
     word_t bytepos = 0;
-    int empty_line = 1;
-    int addr = 0;
-    char hexcode[15];
 
     int index = 0;
 
     while (fgets(buf, LINELEN, infile)) {
 	int cpos = 0;
-	empty_line = 1;
 	lineno++;
 	/* Skip white space */
 	while (isspace((int)buf[cpos]))
@@ -458,8 +556,6 @@ int load_mem_raw(mem_t m, FILE *infile, int report_error)//for backup diff; no G
 	    return 0;
 	}
 
-	addr = bytepos;
-
 	while (isspace((int)buf[cpos]))
 	    cpos++;
 
@@ -483,14 +579,9 @@ int load_mem_raw(mem_t m, FILE *infile, int report_error)//for backup diff; no G
 //潜在的被修改的地方
 	    m->contents[bytepos++] = byte;
 	    byte_cnt++;
-	    empty_line = 0;
-	    hexcode[index++] = ch;
-	    hexcode[index++] = cl;
+		index+=2;
 	}
 	/* Fill rest of hexcode with blanks */
-	for (; index < 12; index++)
-	    hexcode[index] = ' ';
-	hexcode[index] = '\0';
     }
     return byte_cnt;
 }
@@ -619,7 +710,7 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 }
 
 //test&set
-bool_t testset_byte_val(mem_t m, word_t pos, byte_t *dest)
+bool_t testset_byte_val(mem_t m, byte_t pos, byte_t *dest)
 {
 	int fd;
 	struct flock fl = {F_WRLCK, SEEK_SET,   0,      0,     0 };
@@ -1114,7 +1205,7 @@ stat_t step_state(state_ptr s, FILE *error_file)
 	//Use test&set atomic mem access
 	if(hi0 == I_TESTSET)
 	{
-		if (!testset_byte_val(s->m, cval, &val))
+		if (!testset_byte_val(s->m, cval, (byte_t*) &val))
 			return STAT_ADR;
 	}
 	else
