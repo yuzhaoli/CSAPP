@@ -284,7 +284,7 @@ Core0:
 		rmmovl %ebx,(%edx)
 		#rmmovl %ebx, 0(MP_len) #send too long msg len to halt the 2nd cpu
 		irmovl $1,%edi
-		halt
+		jmp ToHalt
 
 Core1:
 # %eax=sum, %ebx=LEN, %ecx=i, %edx=tmp 
@@ -308,51 +308,14 @@ Core1:
 		#sum1=%eax
 		rrmovl %ebx,%ecx
 		ReadMsgLoop:
-			nop
-			nop
-			nop
-			nop
-			mrmovl 00400(%ecx),%edx
-			nop
-			nop
-			nop
-			nop			
-			rmmovl %edx,00400(%ecx)
-			nop
-			nop
-			nop
-			nop
+			mrmovl 400(%ecx),%edx
 			addl %edx,%eax
 			xorl %edx,%edx
-			nop
-			nop
-			nop
-			nop
 			rmmovl %edx,400(%ecx)
-			nop
-			nop
-			nop
-			nop
-			#isubl $1,%ecx #bug here!!
-			nop
-			nop
-			nop
-			nop
+			#isubl $1,%ecx 
 			irmovl $1,%edx
-			nop
-			nop
-			nop
-			nop
 			subl %edx,%ecx
-			nop
-			nop
-			nop
-			nop
 			jg ReadMsgLoop
-			nop
-			nop
-			nop
-			nop
 		irmovl sum1, %edx
 		rmmovl %eax,(%edx)
 		#rmmovl %eax,0(sum1)
@@ -364,6 +327,13 @@ Core1:
 		jmp Waiting_Message_Arrive
 	Done1:
 		irmovl $2,%edi
+		jmp ToHalt
+	ToHalt:
+		xorl %eax,%eax
+		xorl %ebx,%ebx
+		xorl %ecx,%ecx
+		xorl %edx,%edx
+		xorl %esi,%esi
 		halt
 		
 
