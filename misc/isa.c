@@ -232,12 +232,16 @@ void take_msg()
 	}
 	SYS->hasMessage=0;
 }
-void sig_send(){
-	int ret;
-	int pid=-1;
+int peer_pid()
+{
+	int pid=0;
 	if(coreid==0)pid=SYS->pid[1];
 	if(coreid==1)pid=SYS->pid[0];
-	ret = kill(pid,SIGUSR1);
+	return pid;
+}
+void sig_send(){
+	int ret;
+	ret = kill(peer_pid(),SIGUSR1);
 	printf("signal sent; ret : %d\n",ret);
 }
 void send_msg(int addr, int value)
