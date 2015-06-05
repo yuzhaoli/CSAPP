@@ -295,7 +295,7 @@ void IPC_start()
 	}
 	
 	//debug!!
-	send_msg(1024+coreid*4,0xff);
+	//send_msg(1024+coreid*4,0xff);
 }
 
 //kAc Marked at 21:00, 5.16
@@ -690,6 +690,7 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 		//broadcast? only when clean->dirty! or always! (note: it's possible that A read, A write, dirty, then B read, then A write (should also broadcast here); )
 		L1Cache[cache_pos].isDirty=1;
 		L1Cache[cache_pos].myContent=val;
+		send_msg(pos,val);
 		//broadcast??
 	}
 	else
@@ -710,6 +711,7 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 		L1Cache[cache_pos].myAddr=pos;
 		//also need to broadcast
 		L1Cache[cache_pos].myContent=val;
+		send_msg(pos,val);
 	}
     return TRUE;
 }
@@ -776,12 +778,20 @@ void dump_memory(FILE *outfile, mem_t m, word_t pos, int len)
 	}
     }
 }
+mem_t raw_init_mem(int len)
+{
+    mem_t result = (mem_t) malloc(sizeof(mem_rec));
+    len = ((len+BPL-1)/BPL)*BPL;
+    result->len = len;
+	result->contents=calloc(len,1);
+	return result;
+}
 //kAc Marked at 21:00, 5.16
 //关于寄存器file的操作
 //保留
 mem_t init_reg()
 {
-    return init_mem(32);
+    return raw_init_mem(32);
 }
 
 void free_reg(mem_t r)
@@ -791,7 +801,7 @@ void free_reg(mem_t r)
 
 mem_t copy_reg(mem_t oldr)
 {
-	mem_t newm = init_mem(oldr->len);
+	mem_t newm = raw_init_mem(oldr->len);
     memcpy(newm->contents, oldr->contents, oldr->len);
     return newm;
 }
