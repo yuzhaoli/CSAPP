@@ -1,0 +1,377 @@
+	.pos 0
+init:	
+	irmovl testsetloc,%eax
+	testset 0(%eax),%ebx #use $1023 as memory test&set position
+	nop	
+	nop	#need to wait for two cycles, since for test&set the WB and Read is in the same stage (while for traditional ops it's on two different stage)
+	andl %ebx, %ebx	#set cond code
+	je initiscz
+	irmovl $6000, %esp  	# Set up Stack pointer
+	irmovl $6000, %ebp  	# Set up base pointer
+	irmovl $2,%esi
+	jmp Core1		# Execute main program
+initiscz:	
+	irmovl $7000, %esp  	# Set up Stack pointer
+	irmovl $7000, %ebp  	# Set up base pointer
+	irmovl $1,%esi
+	jmp Core0		# Execute main program
+	
+
+	.pos 200
+# Array of 100 elements
+	.align 4
+data:	.long 0xd
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0xc0
+	.long 0xa000
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0xc0
+	.long 0xa000
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0xc0
+	.long 0xa000
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0xc0
+	.long 0xa000
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1
+	.long 0x1	
+	.pos 600
+MP_buf:
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0
+	.long 0x0	
+	
+	#.pos 1200
+MP_len:
+	.long 0x0
+
+#data=200: int[100]
+#MP_len: the length of message if >0, no message if ==0
+#MP_buf=600: buffer for message
+
+	.long 0xffff
+	.long 0xffff
+	.long 0xffff
+	.long 0xffff
+	
+Core0:
+# %eax=sum, %ebx=LEN, %ecx=i, %edx=tmp hasmessage, %esi=??
+	#irmovl $100,%ebx	#LEN=100
+	irmovl MAX_LENGTH,%edx
+	mrmovl (%edx),%ebx
+	jmp CopyMsg
+	Waiting_Message_Taken:
+		nop
+		nop
+		nop
+		irmovl MP_len, %edx
+		mrmovl (%edx),%edx
+		#mrmovl MP_len, %edx
+		andl %edx,%edx	#test %edx
+		jne Waiting_Message_Taken	#while(MP_len!=0)
+	jmp CheckPong ##should read back the reply message, and calculate the sum
+		
+	CopyMsg:
+		xorl %eax,%eax
+		irmovl LENGTH_STEP,%edx
+		mrmovl 0(%edx),%edx
+		subl %edx,%ebx	#LEN-=LENGTH_STEP
+		jle Done0	#if(LEN==0) goto Done
+		#for(i=LEN;i>0;i--)buffer[i]=data[i]
+		#sum0=%eax
+		rrmovl %ebx,%ecx
+		addl %ecx, %ecx
+		addl %ecx, %ecx # addr*=4
+			CopyMsgLoop:
+			mrmovl data(%ecx),%edx
+			rmmovl %edx,MP_buf(%ecx)
+			addl %edx,%eax	#sum+=tmp
+			#iaddl 0xffffffff,%ecx	#i-=1, addr-=4
+			irmovl $4,%edx
+			subl %edx,%ecx
+			jg CopyMsgLoop
+			
+		irmovl sum0, %edx
+		rmmovl %eax,(%edx)
+		irmovl MP_len, %edx
+		rmmovl %ebx,(%edx)
+		mrmovl (%edx),%esi
+		#rmmovl %eax, 0(sum0)
+		#rmmovl %ebx, 0(MP_len)
+		#mrmovl 0(MP_len),%esi
+		jmp Waiting_Message_Taken
+	
+	CheckPong:
+		rrmovl %ebx,%ecx
+		addl %ecx, %ecx
+		addl %ecx, %ecx # addr*=4
+		xorl %eax,%eax
+		CheckPongLoop:
+			mrmovl MP_buf(%ecx),%edx
+			addl %edx,%eax	#sum+=tmp
+			#iaddl 0xffffffff,%ecx	#i-=1, addr-=4
+			irmovl $4,%edx
+			subl %edx,%ecx
+			jg CheckPongLoop
+			
+		rrmovl %eax,%esi
+		jmp CopyMsg
+		
+	Done0:
+		irmovl $1025,%ebx
+		irmovl MP_len, %edx
+		rmmovl %ebx,(%edx)
+		#rmmovl %ebx, 0(MP_len) #send too long msg len to halt the 2nd cpu
+		irmovl $1,%edi
+		jmp BeforeHalt
+
+Core1:
+# %eax=sum, %ebx=LEN, %ecx=i, %edx=tmp 
+	Waiting_Message_Arrive:
+		nop
+		irmovl MP_len, %edx
+		mrmovl (%edx),%ebx
+		#mrmovl 0(MP_len), %ebx
+		andl %ebx,%ebx	#test %ebx
+		je Waiting_Message_Arrive #while(MP_len==0)
+		
+	ReadMsg:
+		#if(len>1024)goto Done
+		irmovl $1024,%edx
+		subl %ebx,%edx #tmp-=len
+		jle Done1
+		
+		xorl %eax,%eax
+		#for(i=LEN;i>0;i--)
+		#	sum+=buffer[i], 
+		#	buffer[i]=0;
+		#sum1=%eax
+		rrmovl %ebx,%ecx
+		addl %ecx, %ecx
+		addl %ecx, %ecx # addr*=4
+		ReadMsgLoop:
+			mrmovl MP_buf(%ecx),%edx
+			addl %edx,%eax
+			addl %edx,%edx
+			rmmovl %edx,MP_buf(%ecx)	#write back, buf[i]*=2
+			#isubl $1,%ecx 
+			irmovl $4,%edx
+			subl %edx,%ecx
+			jg ReadMsgLoop
+			
+		rrmovl %eax,%esi
+		irmovl sum1, %edx
+		rmmovl %eax,(%edx)
+		#rmmovl %eax,0(sum1)
+	TakeMsg:
+		xorl %eax,%eax
+		irmovl MP_len, %edx
+		rmmovl %eax,(%edx)
+		#rmmovl $0,0(MP_len)
+		jmp Waiting_Message_Arrive
+	Done1:
+		irmovl $2,%edi
+		jmp BeforeHalt
+	BeforeHalt:
+		xorl %eax,%eax
+		xorl %ebx,%ebx
+		xorl %ecx,%ecx
+		xorl %edx,%edx
+		xorl %esi,%esi
+		iaddl $0,%edi
+		halt
+		
+	.long 0xffff
+	.long 0xffff
+	.long 0xffff
+	.long 0xffff
+.pos 1500
+sum0:	.long 0x0
+sum1:	.long 0x0
+testsetloc:	.long 0x0
+#MAX_LENGTH:	.long 0x64 # 100
+#LENGTH_STEP:	.long 0x1 # 1
+MAX_LENGTH:	.long 0x1e # 30
+LENGTH_STEP:	.long 0xa # 10

@@ -1,0 +1,377 @@
+  0x000:              | 	.pos 0
+  0x000:              | init:	
+  0x000: 30f0e4050000 | 	irmovl testsetloc,%eax
+  0x006: e03000000000 | 	testset 0(%eax),%ebx #use $1023 as memory test&set position
+  0x00c: 10           | 	nop	
+  0x00d: 10           | 	nop	#need to wait for two cycles, since for test&set the WB and Read is in the same stage (while for traditional ops it's on two different stage)
+  0x00e: 6233         | 	andl %ebx, %ebx	#set cond code
+  0x010: 732c000000   | 	je initiscz
+  0x015: 30f470170000 | 	irmovl $6000, %esp  	# Set up Stack pointer
+  0x01b: 30f570170000 | 	irmovl $6000, %ebp  	# Set up base pointer
+  0x021: 30f602000000 | 	irmovl $2,%esi
+  0x027: 70c2040000   | 	jmp Core1		# Execute main program
+  0x02c:              | initiscz:	
+  0x02c: 30f4581b0000 | 	irmovl $7000, %esp  	# Set up Stack pointer
+  0x032: 30f5581b0000 | 	irmovl $7000, %ebp  	# Set up base pointer
+  0x038: 30f601000000 | 	irmovl $1,%esi
+  0x03e: 70fc030000   | 	jmp Core0		# Execute main program
+                      | 	
+                      | 
+  0x0c8:              | 	.pos 200
+                      | # Array of 100 elements
+  0x0c8:              | 	.align 4
+  0x0c8: 0d000000     | data:	.long 0xd
+  0x0cc: 01000000     | 	.long 0x1
+  0x0d0: 01000000     | 	.long 0x1
+  0x0d4: 01000000     | 	.long 0x1
+  0x0d8: 01000000     | 	.long 0x1
+  0x0dc: 01000000     | 	.long 0x1
+  0x0e0: 01000000     | 	.long 0x1
+  0x0e4: 01000000     | 	.long 0x1
+  0x0e8: 01000000     | 	.long 0x1
+  0x0ec: c0000000     | 	.long 0xc0
+  0x0f0: 00a00000     | 	.long 0xa000
+  0x0f4: 01000000     | 	.long 0x1
+  0x0f8: 01000000     | 	.long 0x1
+  0x0fc: 01000000     | 	.long 0x1
+  0x100: 01000000     | 	.long 0x1
+  0x104: 01000000     | 	.long 0x1
+  0x108: 01000000     | 	.long 0x1
+  0x10c: 01000000     | 	.long 0x1
+  0x110: 01000000     | 	.long 0x1
+  0x114: 01000000     | 	.long 0x1
+  0x118: 01000000     | 	.long 0x1
+  0x11c: 01000000     | 	.long 0x1
+  0x120: 01000000     | 	.long 0x1
+  0x124: 01000000     | 	.long 0x1
+  0x128: 01000000     | 	.long 0x1
+  0x12c: 01000000     | 	.long 0x1
+  0x130: 01000000     | 	.long 0x1
+  0x134: 01000000     | 	.long 0x1
+  0x138: 01000000     | 	.long 0x1
+  0x13c: 01000000     | 	.long 0x1
+  0x140: 01000000     | 	.long 0x1
+  0x144: 01000000     | 	.long 0x1
+  0x148: 01000000     | 	.long 0x1
+  0x14c: c0000000     | 	.long 0xc0
+  0x150: 00a00000     | 	.long 0xa000
+  0x154: 01000000     | 	.long 0x1
+  0x158: 01000000     | 	.long 0x1
+  0x15c: 01000000     | 	.long 0x1
+  0x160: 01000000     | 	.long 0x1
+  0x164: 01000000     | 	.long 0x1
+  0x168: 01000000     | 	.long 0x1
+  0x16c: 01000000     | 	.long 0x1
+  0x170: 01000000     | 	.long 0x1
+  0x174: 01000000     | 	.long 0x1
+  0x178: 01000000     | 	.long 0x1
+  0x17c: 01000000     | 	.long 0x1
+  0x180: 01000000     | 	.long 0x1
+  0x184: 01000000     | 	.long 0x1
+  0x188: 01000000     | 	.long 0x1
+  0x18c: 01000000     | 	.long 0x1
+  0x190: 01000000     | 	.long 0x1
+  0x194: 01000000     | 	.long 0x1
+  0x198: 01000000     | 	.long 0x1
+  0x19c: 01000000     | 	.long 0x1
+  0x1a0: 01000000     | 	.long 0x1
+  0x1a4: 01000000     | 	.long 0x1
+  0x1a8: c0000000     | 	.long 0xc0
+  0x1ac: 00a00000     | 	.long 0xa000
+  0x1b0: 01000000     | 	.long 0x1
+  0x1b4: 01000000     | 	.long 0x1
+  0x1b8: 01000000     | 	.long 0x1
+  0x1bc: 01000000     | 	.long 0x1
+  0x1c0: 01000000     | 	.long 0x1
+  0x1c4: 01000000     | 	.long 0x1
+  0x1c8: 01000000     | 	.long 0x1
+  0x1cc: 01000000     | 	.long 0x1
+  0x1d0: 01000000     | 	.long 0x1
+  0x1d4: 01000000     | 	.long 0x1
+  0x1d8: 01000000     | 	.long 0x1
+  0x1dc: 01000000     | 	.long 0x1
+  0x1e0: 01000000     | 	.long 0x1
+  0x1e4: 01000000     | 	.long 0x1
+  0x1e8: 01000000     | 	.long 0x1
+  0x1ec: 01000000     | 	.long 0x1
+  0x1f0: 01000000     | 	.long 0x1
+  0x1f4: 01000000     | 	.long 0x1
+  0x1f8: 01000000     | 	.long 0x1
+  0x1fc: 01000000     | 	.long 0x1
+  0x200: 01000000     | 	.long 0x1
+  0x204: 01000000     | 	.long 0x1
+  0x208: c0000000     | 	.long 0xc0
+  0x20c: 00a00000     | 	.long 0xa000
+  0x210: 01000000     | 	.long 0x1
+  0x214: 01000000     | 	.long 0x1
+  0x218: 01000000     | 	.long 0x1
+  0x21c: 01000000     | 	.long 0x1
+  0x220: 01000000     | 	.long 0x1
+  0x224: 01000000     | 	.long 0x1
+  0x228: 01000000     | 	.long 0x1
+  0x22c: 01000000     | 	.long 0x1
+  0x230: 01000000     | 	.long 0x1
+  0x234: 01000000     | 	.long 0x1
+  0x238: 01000000     | 	.long 0x1
+  0x23c: 01000000     | 	.long 0x1
+  0x240: 01000000     | 	.long 0x1
+  0x244: 01000000     | 	.long 0x1
+  0x248: 01000000     | 	.long 0x1
+  0x24c: 01000000     | 	.long 0x1
+  0x250: 01000000     | 	.long 0x1
+  0x254: 01000000     | 	.long 0x1	
+  0x258:              | 	.pos 600
+  0x258:              | MP_buf:
+  0x258: 00000000     | 	.long 0x0
+  0x25c: 00000000     | 	.long 0x0
+  0x260: 00000000     | 	.long 0x0
+  0x264: 00000000     | 	.long 0x0
+  0x268: 00000000     | 	.long 0x0
+  0x26c: 00000000     | 	.long 0x0
+  0x270: 00000000     | 	.long 0x0
+  0x274: 00000000     | 	.long 0x0
+  0x278: 00000000     | 	.long 0x0
+  0x27c: 00000000     | 	.long 0x0
+  0x280: 00000000     | 	.long 0x0
+  0x284: 00000000     | 	.long 0x0
+  0x288: 00000000     | 	.long 0x0
+  0x28c: 00000000     | 	.long 0x0
+  0x290: 00000000     | 	.long 0x0
+  0x294: 00000000     | 	.long 0x0
+  0x298: 00000000     | 	.long 0x0
+  0x29c: 00000000     | 	.long 0x0
+  0x2a0: 00000000     | 	.long 0x0
+  0x2a4: 00000000     | 	.long 0x0
+  0x2a8: 00000000     | 	.long 0x0
+  0x2ac: 00000000     | 	.long 0x0
+  0x2b0: 00000000     | 	.long 0x0
+  0x2b4: 00000000     | 	.long 0x0
+  0x2b8: 00000000     | 	.long 0x0
+  0x2bc: 00000000     | 	.long 0x0
+  0x2c0: 00000000     | 	.long 0x0
+  0x2c4: 00000000     | 	.long 0x0
+  0x2c8: 00000000     | 	.long 0x0
+  0x2cc: 00000000     | 	.long 0x0
+  0x2d0: 00000000     | 	.long 0x0
+  0x2d4: 00000000     | 	.long 0x0
+  0x2d8: 00000000     | 	.long 0x0
+  0x2dc: 00000000     | 	.long 0x0
+  0x2e0: 00000000     | 	.long 0x0
+  0x2e4: 00000000     | 	.long 0x0
+  0x2e8: 00000000     | 	.long 0x0
+  0x2ec: 00000000     | 	.long 0x0
+  0x2f0: 00000000     | 	.long 0x0
+  0x2f4: 00000000     | 	.long 0x0
+  0x2f8: 00000000     | 	.long 0x0
+  0x2fc: 00000000     | 	.long 0x0
+  0x300: 00000000     | 	.long 0x0
+  0x304: 00000000     | 	.long 0x0
+  0x308: 00000000     | 	.long 0x0
+  0x30c: 00000000     | 	.long 0x0
+  0x310: 00000000     | 	.long 0x0
+  0x314: 00000000     | 	.long 0x0
+  0x318: 00000000     | 	.long 0x0
+  0x31c: 00000000     | 	.long 0x0
+  0x320: 00000000     | 	.long 0x0
+  0x324: 00000000     | 	.long 0x0
+  0x328: 00000000     | 	.long 0x0
+  0x32c: 00000000     | 	.long 0x0
+  0x330: 00000000     | 	.long 0x0
+  0x334: 00000000     | 	.long 0x0
+  0x338: 00000000     | 	.long 0x0
+  0x33c: 00000000     | 	.long 0x0
+  0x340: 00000000     | 	.long 0x0
+  0x344: 00000000     | 	.long 0x0
+  0x348: 00000000     | 	.long 0x0
+  0x34c: 00000000     | 	.long 0x0
+  0x350: 00000000     | 	.long 0x0
+  0x354: 00000000     | 	.long 0x0
+  0x358: 00000000     | 	.long 0x0
+  0x35c: 00000000     | 	.long 0x0
+  0x360: 00000000     | 	.long 0x0
+  0x364: 00000000     | 	.long 0x0
+  0x368: 00000000     | 	.long 0x0
+  0x36c: 00000000     | 	.long 0x0
+  0x370: 00000000     | 	.long 0x0
+  0x374: 00000000     | 	.long 0x0
+  0x378: 00000000     | 	.long 0x0
+  0x37c: 00000000     | 	.long 0x0
+  0x380: 00000000     | 	.long 0x0
+  0x384: 00000000     | 	.long 0x0
+  0x388: 00000000     | 	.long 0x0
+  0x38c: 00000000     | 	.long 0x0
+  0x390: 00000000     | 	.long 0x0
+  0x394: 00000000     | 	.long 0x0
+  0x398: 00000000     | 	.long 0x0
+  0x39c: 00000000     | 	.long 0x0
+  0x3a0: 00000000     | 	.long 0x0
+  0x3a4: 00000000     | 	.long 0x0
+  0x3a8: 00000000     | 	.long 0x0
+  0x3ac: 00000000     | 	.long 0x0
+  0x3b0: 00000000     | 	.long 0x0
+  0x3b4: 00000000     | 	.long 0x0
+  0x3b8: 00000000     | 	.long 0x0
+  0x3bc: 00000000     | 	.long 0x0
+  0x3c0: 00000000     | 	.long 0x0
+  0x3c4: 00000000     | 	.long 0x0
+  0x3c8: 00000000     | 	.long 0x0
+  0x3cc: 00000000     | 	.long 0x0
+  0x3d0: 00000000     | 	.long 0x0
+  0x3d4: 00000000     | 	.long 0x0
+  0x3d8: 00000000     | 	.long 0x0
+  0x3dc: 00000000     | 	.long 0x0
+  0x3e0: 00000000     | 	.long 0x0
+  0x3e4: 00000000     | 	.long 0x0	
+                      | 	
+                      | 	#.pos 1200
+  0x3e8:              | MP_len:
+  0x3e8: 00000000     | 	.long 0x0
+                      | 
+                      | #data=200: int[100]
+                      | #MP_len: the length of message if >0, no message if ==0
+                      | #MP_buf=600: buffer for message
+                      | 
+  0x3ec: ffff0000     | 	.long 0xffff
+  0x3f0: ffff0000     | 	.long 0xffff
+  0x3f4: ffff0000     | 	.long 0xffff
+  0x3f8: ffff0000     | 	.long 0xffff
+                      | 	
+  0x3fc:              | Core0:
+                      | # %eax=sum, %ebx=LEN, %ecx=i, %edx=tmp hasmessage, %esi=??
+                      | 	#irmovl $100,%ebx	#LEN=100
+  0x3fc: 30f2e8050000 | 	irmovl MAX_LENGTH,%edx
+  0x402: 503200000000 | 	mrmovl (%edx),%ebx
+  0x408: 7028040000   | 	jmp CopyMsg
+  0x40d:              | 	Waiting_Message_Taken:
+  0x40d: 10           | 		nop
+  0x40e: 10           | 		nop
+  0x40f: 10           | 		nop
+  0x410: 30f2e8030000 | 		irmovl MP_len, %edx
+  0x416: 502200000000 | 		mrmovl (%edx),%edx
+                      | 		#mrmovl MP_len, %edx
+  0x41c: 6222         | 		andl %edx,%edx	#test %edx
+  0x41e: 740d040000   | 		jne Waiting_Message_Taken	#while(MP_len!=0)
+  0x423: 7081040000   | 	jmp CheckPong ##should read back the reply message, and calculate the sum
+                      | 		
+  0x428:              | 	CopyMsg:
+  0x428: 6300         | 		xorl %eax,%eax
+  0x42a: 30f2ec050000 | 		irmovl LENGTH_STEP,%edx
+  0x430: 502200000000 | 		mrmovl 0(%edx),%edx
+  0x436: 6123         | 		subl %edx,%ebx	#LEN-=LENGTH_STEP
+  0x438: 71a5040000   | 		jle Done0	#if(LEN==0) goto Done
+                      | 		#for(i=LEN;i>0;i--)buffer[i]=data[i]
+                      | 		#sum0=%eax
+  0x43d: 2031         | 		rrmovl %ebx,%ecx
+  0x43f: 6011         | 		addl %ecx, %ecx
+  0x441: 6011         | 		addl %ecx, %ecx # addr*=4
+  0x443:              | 			CopyMsgLoop:
+  0x443: 5021c8000000 | 			mrmovl data(%ecx),%edx
+  0x449: 402158020000 | 			rmmovl %edx,MP_buf(%ecx)
+  0x44f: 6020         | 			addl %edx,%eax	#sum+=tmp
+                      | 			#iaddl 0xffffffff,%ecx	#i-=1, addr-=4
+  0x451: 30f204000000 | 			irmovl $4,%edx
+  0x457: 6121         | 			subl %edx,%ecx
+  0x459: 7643040000   | 			jg CopyMsgLoop
+                      | 			
+  0x45e: 30f2dc050000 | 		irmovl sum0, %edx
+  0x464: 400200000000 | 		rmmovl %eax,(%edx)
+  0x46a: 30f2e8030000 | 		irmovl MP_len, %edx
+  0x470: 403200000000 | 		rmmovl %ebx,(%edx)
+  0x476: 506200000000 | 		mrmovl (%edx),%esi
+                      | 		#rmmovl %eax, 0(sum0)
+                      | 		#rmmovl %ebx, 0(MP_len)
+                      | 		#mrmovl 0(MP_len),%esi
+  0x47c: 700d040000   | 		jmp Waiting_Message_Taken
+                      | 	
+  0x481:              | 	CheckPong:
+  0x481: 2031         | 		rrmovl %ebx,%ecx
+  0x483: 6011         | 		addl %ecx, %ecx
+  0x485: 6011         | 		addl %ecx, %ecx # addr*=4
+  0x487: 6300         | 		xorl %eax,%eax
+  0x489:              | 		CheckPongLoop:
+  0x489: 502158020000 | 			mrmovl MP_buf(%ecx),%edx
+  0x48f: 6020         | 			addl %edx,%eax	#sum+=tmp
+                      | 			#iaddl 0xffffffff,%ecx	#i-=1, addr-=4
+  0x491: 30f204000000 | 			irmovl $4,%edx
+  0x497: 6121         | 			subl %edx,%ecx
+  0x499: 7689040000   | 			jg CheckPongLoop
+                      | 			
+  0x49e: 2006         | 		rrmovl %eax,%esi
+  0x4a0: 7028040000   | 		jmp CopyMsg
+                      | 		
+  0x4a5:              | 	Done0:
+  0x4a5: 30f301040000 | 		irmovl $1025,%ebx
+  0x4ab: 30f2e8030000 | 		irmovl MP_len, %edx
+  0x4b1: 403200000000 | 		rmmovl %ebx,(%edx)
+                      | 		#rmmovl %ebx, 0(MP_len) #send too long msg len to halt the 2nd cpu
+  0x4b7: 30f701000000 | 		irmovl $1,%edi
+  0x4bd: 7034050000   | 		jmp BeforeHalt
+                      | 
+  0x4c2:              | Core1:
+                      | # %eax=sum, %ebx=LEN, %ecx=i, %edx=tmp 
+  0x4c2:              | 	Waiting_Message_Arrive:
+  0x4c2: 10           | 		nop
+  0x4c3: 30f2e8030000 | 		irmovl MP_len, %edx
+  0x4c9: 503200000000 | 		mrmovl (%edx),%ebx
+                      | 		#mrmovl 0(MP_len), %ebx
+  0x4cf: 6233         | 		andl %ebx,%ebx	#test %ebx
+  0x4d1: 73c2040000   | 		je Waiting_Message_Arrive #while(MP_len==0)
+                      | 		
+  0x4d6:              | 	ReadMsg:
+                      | 		#if(len>1024)goto Done
+  0x4d6: 30f200040000 | 		irmovl $1024,%edx
+  0x4dc: 6132         | 		subl %ebx,%edx #tmp-=len
+  0x4de: 7129050000   | 		jle Done1
+                      | 		
+  0x4e3: 6300         | 		xorl %eax,%eax
+                      | 		#for(i=LEN;i>0;i--)
+                      | 		#	sum+=buffer[i], 
+                      | 		#	buffer[i]=0;
+                      | 		#sum1=%eax
+  0x4e5: 2031         | 		rrmovl %ebx,%ecx
+  0x4e7: 6011         | 		addl %ecx, %ecx
+  0x4e9: 6011         | 		addl %ecx, %ecx # addr*=4
+  0x4eb:              | 		ReadMsgLoop:
+  0x4eb: 502158020000 | 			mrmovl MP_buf(%ecx),%edx
+  0x4f1: 6020         | 			addl %edx,%eax
+  0x4f3: 6022         | 			addl %edx,%edx
+  0x4f5: 402158020000 | 			rmmovl %edx,MP_buf(%ecx)	#write back, buf[i]*=2
+                      | 			#isubl $1,%ecx 
+  0x4fb: 30f204000000 | 			irmovl $4,%edx
+  0x501: 6121         | 			subl %edx,%ecx
+  0x503: 76eb040000   | 			jg ReadMsgLoop
+                      | 			
+  0x508: 2006         | 		rrmovl %eax,%esi
+  0x50a: 30f2e0050000 | 		irmovl sum1, %edx
+  0x510: 400200000000 | 		rmmovl %eax,(%edx)
+                      | 		#rmmovl %eax,0(sum1)
+  0x516:              | 	TakeMsg:
+  0x516: 6300         | 		xorl %eax,%eax
+  0x518: 30f2e8030000 | 		irmovl MP_len, %edx
+  0x51e: 400200000000 | 		rmmovl %eax,(%edx)
+                      | 		#rmmovl $0,0(MP_len)
+  0x524: 70c2040000   | 		jmp Waiting_Message_Arrive
+  0x529:              | 	Done1:
+  0x529: 30f702000000 | 		irmovl $2,%edi
+  0x52f: 7034050000   | 		jmp BeforeHalt
+  0x534:              | 	BeforeHalt:
+  0x534: 6300         | 		xorl %eax,%eax
+  0x536: 6333         | 		xorl %ebx,%ebx
+  0x538: 6311         | 		xorl %ecx,%ecx
+  0x53a: 6322         | 		xorl %edx,%edx
+  0x53c: 6366         | 		xorl %esi,%esi
+  0x53e: c0f700000000 | 		iaddl $0,%edi
+  0x544: 00           | 		halt
+                      | 		
+  0x545: ffff0000     | 	.long 0xffff
+  0x549: ffff0000     | 	.long 0xffff
+  0x54d: ffff0000     | 	.long 0xffff
+  0x551: ffff0000     | 	.long 0xffff
+  0x5dc:              | .pos 1500
+  0x5dc: 00000000     | sum0:	.long 0x0
+  0x5e0: 00000000     | sum1:	.long 0x0
+  0x5e4: 00000000     | testsetloc:	.long 0x0
+                      | #MAX_LENGTH:	.long 0x64 # 100
+                      | #LENGTH_STEP:	.long 0x1 # 1
+  0x5e8: 1e000000     | MAX_LENGTH:	.long 0x1e # 30
+  0x5ec: 0a000000     | LENGTH_STEP:	.long 0xa # 10
