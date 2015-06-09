@@ -21,7 +21,10 @@ int main(int argc, char *argv[])
 
     state_ptr s = new_state(MEM_SIZE);
     //mem_t saver = copy_reg(s->r);
-	mem_t saver = calloc(32,1);
+	mem_t saver = calloc(sizeof(mem_t),1);
+	saver->len=32;
+	savem->contents=calloc(32,1);
+	
     mem_t savem = calloc(sizeof(mem_t),1);
 	savem->len=MEM_SIZE;
 	savem->contents=calloc(MEM_SIZE,1);

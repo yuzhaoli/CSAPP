@@ -167,10 +167,13 @@ cache_line L1Cache[L1size];
   shm1: for IPC, using struct IPCaddr
   shm2: the "memory"
 */
+void* shm1_rem=0;
+void* shm2_rem=0;
 void* shm1(){
 	int shmid;
 	const int SHMSZ=sizeof(system_status);
     char *shm;
+	if(shm1_rem!=0)return shm1_rem;
     if ((shmid = shmget(SHMKEY1, SHMSZ, IPC_CREAT | 0666)) < 0) {
         perror("shmget");
         exit(1);
@@ -179,12 +182,13 @@ void* shm1(){
         perror("shmat");
         exit(1);
     }
-    return shm;
+    return shm1_rem=shm;
 }
 void* shm2(){
 	int shmid;
 	const int SHMSZ=MEM_SIZE;
     char *shm;
+	if(shm2_rem!=0)return shm2_rem;
     if ((shmid = shmget(SHMKEY2, SHMSZ, IPC_CREAT | 0666)) < 0) {
         perror("shmget");
         exit(1);
@@ -193,7 +197,7 @@ void* shm2(){
         perror("shmat");
         exit(1);
     }
-    return shm;
+    return shm2_rem=shm;
 }
 system_status *SYS;
 #ifdef CORE0
